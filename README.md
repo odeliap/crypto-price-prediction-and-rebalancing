@@ -1,11 +1,11 @@
-# Cryptocurrency Price Prediction and Automated Index Fund Rebalancing
+# Cryptocurrency Price Prediction and Automated Index Fund Rebalancing 💸
 Repository for cryptocurrency price prediction with automated index-fund rebalancing on predicted prices.
 
 This project uses sentiment analysis and an LSTM model for cryptocurrency price predictions.
 
 ## Setup Virtual Environment
 
-This project utilizes python version 3.9.7, but it should be compatile with other versions of python3.
+This project utilizes python version 3.9.7, but it should be compatible with other versions of python3.
 To set this version, I used `pyenv` (common python version management tool). To install `pyenv`, follows 
 the directions at the [pyenv repository](https://github.com/pyenv/pyenv#getting-pyenv).
 
