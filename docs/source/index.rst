@@ -8,9 +8,18 @@ Welcome to crypto-price-prediction-and-rebalancing's documentation!
 
 Welcome to the complete guide to Cryptocurrency Price Prediction and Index Fund Rebalancing!
 
+If you are completely new, see the :ref:`installation and setup <settingup>` for this project.
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+
+   beforeyoubegin
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Project Process
+
+   datasets
 
 
 

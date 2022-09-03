@@ -1,3 +1,5 @@
+.. _settingup:
+
 Setting up crypto-price-prediction-and-rebalancing
 ==================================================
 
