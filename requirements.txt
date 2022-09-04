@@ -2,4 +2,5 @@ sphinx
 sphinx-rtd-theme
 streamlit
 newsapi-python
+crypto-news-api
 pandas

@@ -1,17 +1,14 @@
 """
-Data scraper for news sources
+Data scraper for news sources using News API
 """
 
 # ------------- Libraries -------------
 import logging
 import math
 
-import time
-
-import os
-
 import pandas as pd
 
+from util import dataframe_to_csv
 from newsapi import NewsApiClient
 
 # Set logging level
@@ -22,13 +19,29 @@ logging.basicConfig(level=logging.INFO)
 
 API_KEY = '681ea4f3f4de4f29a08687c9f692beed'
 
-CATEGORIES = ['business', 'entertainment', 'technology']
+CATEGORIES = ['business', 'technology']
 
-KEYWORDS = ['bitcoin', 'cryptocurrency'] # TODO: expand keywords
+# list of coins of interest from: https://coinmarketcap.com
+COINS = ['Tether', 'USD Coin', 'BNB', 'Binance USD', 'Cardano', 'XRP', 'Solana', 'Dogecoin',
+            'Polkadot', 'Polygon', 'Shiba Inu', 'Dai', 'TRON', 'Avalanche', 'UNUS SED LEO',
+            'Wrapped Bitcoin', 'Uniswap', 'Etherum Classic', 'Litecoin', 'Cosmos', 'Chainlink',
+            'FTX Token', 'NEAR Protocol', 'Cronos', 'Monero', 'Stellar', 'Bitcoin Cash',
+            'Algorand', 'Flow', 'VeChain', 'Filecoin', 'Internet Computer', 'Decentraland', 'EOS',
+            'ApeCoin', 'The Sandbox', 'Tezos', 'Hedera', 'Chiliz', 'Aave', 'Axie Infinity',
+            'Elrond', 'Theta Network', 'Quant', 'TrueUSD', 'Bitcoin SV', 'Zcash', 'Pax Dollar']
+
+# list of keywords built off: https://time.com/nextadvisor/investing/cryptocurrency/crypto-terms-you-should-know-before-investing/
+KEYWORDS = ['Altcoin', 'Bitcoin', 'Block', 'Blockchain', 'Coin', 'Coinbase', 'Cold Wallet',
+            'Cold Storage', 'Crypto', 'Cryptocurrency', 'Decentralization', 'DeFi', 'DApps',
+            'Digital Gold', 'Ethereum', 'Exchange', 'Fork', 'Genesis Block', 'HODL', 'Halving',
+            'Hash', 'Hot Wallet', 'Initial Coin Offering', 'ICO', 'Market Capitalization',
+            'Mining', 'Node', 'Non-fungible Tokens', 'NFTs', 'Peer-to-peer', 'Public Key',
+            'Private Key', 'Satoshi Nakomoto', 'Smart Contract', 'Stablecoin', 'Digital Fiat',
+            'Token', 'Vitalik Buterin', 'Wallet']
 
 COUNTRY = 'us'
-START_DATE = '2022-08-03'
-END_DATE = '2022-09-02'
+START_DATE = '2022-08-04'
+END_DATE = '2022-09-03'
 SORT_BY = 'popularity'
 PAGE_SIZE = 100
 
@@ -54,7 +67,7 @@ class NewsScraper:
         self.headlines = pd.DataFrame(columns=COLUMN_NAMES)
         self.daily_api_requests = 100
 
-        self.keywords = ','.join(KEYWORDS)
+        self.keywords = ','.join(KEYWORDS + COINS)
         self.sources = self.get_all_sources()
 
 
@@ -88,15 +101,14 @@ class NewsScraper:
         """
         Send news api get everything request.
 
-        :param: page: defaulted to 1
-        :type: int
+        :param page: defaulted to 1
+        :type int
 
-        :return: headlines: news api dictionary result
-        :rtype: dict
+        :return headlines: news api dictionary result
+        :rtype dict
         """
-        # TODO: bring back keywords
         headlines = self.newsapi.get_everything(
-            #q=self.keywords,
+            q=self.keywords,
             sources=self.sources,
             from_param=START_DATE,
             to=END_DATE,
@@ -114,15 +126,14 @@ class NewsScraper:
         """
         Send news api top headlines request.
 
-        :param: page: defaulted to 1
-        :type: int
+        :param page: defaulted to 1
+        :type int
 
-        :return: headlines: news api dictionary result
-        :rtype: dict
+        :return headlines: news api dictionary result
+        :rtype dict
         """
-        # TODO: bring back keywords
         headlines = self.newsapi.get_top_headlines(
-                #q=self.keywords,
+                q=self.keywords,
                 sources=self.sources,
                 page_size=PAGE_SIZE,
                 page=page
@@ -137,8 +148,8 @@ class NewsScraper:
         """
         Gets all the sources available across the categories of interest.
 
-        :return: sources: all the sources
-        :rtype: str
+        :return sources: all the sources
+        :rtype str
         """
         combined_sources = []
 
@@ -165,7 +176,7 @@ class NewsScraper:
         self.headlines.
 
         :param dictionary: news api Python dictionary result.
-        :type: dict
+        :type dict
         """
         logging.info(f'dictionary: {dictionary}')
         articles = dictionary.get('articles')
@@ -185,23 +196,16 @@ class NewsScraper:
         Get remaining pages to sort through.
 
         :param total_results: total results returned from news api query
-        :type: int
+        :type int
 
-        :return: remaining_pages: remaining pages in query
-        :type: int
+        :return remaining_pages: remaining pages in query
+        :type int
         """
         return math.ceil((total_results - 100)/100)
-
-
-    def dataframe_to_csv(self) -> None:
-        logging.info('Saving dataframe to csv')
-        os.makedirs('outputs', exist_ok=True)
-        time.sleep(3)
-        self.headlines.to_csv(FILEPATH)
 
 
 if __name__ == "__main__":
     scraper = NewsScraper()
     scraper.get_all_headlines()
     scraper.get_top_headlines()
-    scraper.dataframe_to_csv()
+    dataframe_to_csv(scraper.headlines, FILEPATH)
