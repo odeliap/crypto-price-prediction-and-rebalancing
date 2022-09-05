@@ -31,7 +31,7 @@ def merge(dictionary1: dict, dictionary2: dict):
 
 def dataframe_to_csv(dataframe, filepath) -> None:
     """
-    Save dataframe as csv file to outputs directory.
+    Save dataframe as csv file to datasets directory.
 
     :param dataframe: pandas dataframe to save as csv
     :type pd.DataFrame
@@ -40,6 +40,6 @@ def dataframe_to_csv(dataframe, filepath) -> None:
     :type str
     """
     logging.info('Saving dataframe to csv')
-    os.makedirs('outputs', exist_ok=True)
+    os.makedirs('datasets', exist_ok=True)
     time.sleep(3)
     dataframe.to_csv(filepath)

@@ -23,8 +23,8 @@ MARKET_API_KEY = '1b7fcdab-bbfd-4753-840c-e8c853121fd7'
 COLUMN_NAMES = ['title', 'text', 'date', 'coin']
 COIN_ID_MAP_COLUMN_NAMES = ['slug', 'name', 'symbol']
 
-HEADLINES_FILEPATH = 'outputs/crypto_news.csv'
-COIN_ID_MAP_FILEPATH = 'outputs/id_map.csv'
+HEADLINES_FILEPATH = 'datasets/news/crypto_news.csv'
+COIN_ID_MAP_FILEPATH = 'datasets/util/id_map.csv'
 
 LANGUAGE = "en"
 
@@ -117,6 +117,7 @@ class CryptoNewsScraper:
 
 
 if __name__ == "__main__":
+    # TODO: fix api call, getting bad request
     scraper = CryptoNewsScraper()
     scraper.get_top_news()
     scraper.get_top_news_by_coin()

@@ -8,6 +8,9 @@ import math
 
 import pandas as pd
 
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 from util import dataframe_to_csv
 from newsapi import NewsApiClient
 
@@ -40,14 +43,15 @@ KEYWORDS = ['Altcoin', 'Bitcoin', 'Block', 'Blockchain', 'Coin', 'Coinbase', 'Co
             'Token', 'Vitalik Buterin', 'Wallet']
 
 COUNTRY = 'us'
-START_DATE = '2022-08-04'
-END_DATE = '2022-09-03'
+DATE_FORMAT = '%Y-%m-%d'
+END_DATE = datetime.today().strftime(DATE_FORMAT) # Set scraping end date
+START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(months=1) # Set scraping start date
 SORT_BY = 'popularity'
 PAGE_SIZE = 100
 
-COLUMN_NAMES = ['title', 'description', 'publishedAt']
+COLUMN_NAMES = ['title', 'text', 'date', 'coin']
 
-FILEPATH = 'outputs/news.csv'
+FILEPATH = 'datasets/news/news.csv'
 
 # ------------- Class -------------
 
@@ -67,7 +71,8 @@ class NewsScraper:
         self.headlines = pd.DataFrame(columns=COLUMN_NAMES)
         self.daily_api_requests = 100
 
-        self.keywords = ','.join(KEYWORDS + COINS)
+        self.keywords = 'crypto' # TODO: find way to query on all keywords and coins
+        # self.keywords = ','.join(KEYWORDS + COINS)
         self.sources = self.get_all_sources()
 
 
@@ -76,12 +81,16 @@ class NewsScraper:
         Gets all the headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_all_headlines()
+        # TODO: find way to access more results (increase plan?)
+        """
         if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
-                remaining_pages = self.remaining_pages(total_results)
-                for page in range(2, remaining_pages + 2):
-                    self.base_get_all_headlines(page)
+                if self.daily_api_requests > 0:
+                    remaining_pages = self.remaining_pages(total_results)
+                    for page in range(2, remaining_pages + 2):
+                        self.base_get_all_headlines(page)
+        """
 
 
     def get_top_headlines(self) -> None:
@@ -89,12 +98,16 @@ class NewsScraper:
         Gets all top headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_top_headlines()
+        # TODO: find way to access more results (increase plan?)
+        """
         if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
-                remaining_pages = self.remaining_pages(total_results)
-                for page in range(2, remaining_pages + 2):
-                    self.base_get_top_headlines(page)
+                while self.daily_api_requests > 0:
+                    remaining_pages = self.remaining_pages(total_results)
+                    for page in range(2, remaining_pages + 2):
+                        self.base_get_top_headlines(page)
+        """
 
 
     def base_get_all_headlines(self, page: int = 1) -> dict:
@@ -184,7 +197,7 @@ class NewsScraper:
             title = article.get('title')
             description = article.get('description')
             publishedAt = article.get('publishedAt')
-            row = {'title': title, 'description': description, 'publishedAt': publishedAt}
+            row = {'title': title, 'text': description, 'date': publishedAt, 'coin': ''}
             logging.info(f'row: {row}')
             self.headlines = self.headlines.append(row, ignore_index=True)
         logging.info(f'updated headlines: {self.headlines}')

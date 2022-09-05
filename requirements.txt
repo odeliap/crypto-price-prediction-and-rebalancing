@@ -4,3 +4,4 @@ streamlit
 newsapi-python
 crypto-news-api
 pandas
+OpenBlender
