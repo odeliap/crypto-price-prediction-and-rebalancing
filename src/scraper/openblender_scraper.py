@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 ACTION = 'API_getObservationsFromDataset'
 
-PRICE_FILEPATH = 'datasets/price/openblender_price.csv'
+PRICE_FILEPATH = 'datasets/price/crypto_index_prices.csv'
 NEWS_FILEPATH = 'datasets/news/openblender_news.csv'
 
 
