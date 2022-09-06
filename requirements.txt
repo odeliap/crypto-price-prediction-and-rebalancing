@@ -5,3 +5,6 @@ newsapi-python
 crypto-news-api
 pandas
 OpenBlender
+vaderSentiment
+textblob
+sklearn
