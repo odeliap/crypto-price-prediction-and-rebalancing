@@ -15,6 +15,9 @@ from util import dataframe_to_csv
 
 from crypto_news_api import CryptoControlAPI
 
+# Set logging level
+logging.basicConfig(level=logging.INFO)
+
 # ------------- Constants -------------
 
 NEWS_API_KEY = 'gvpifrrlnsffapoedsbpc0e7vucofq9saqnqjnsm'
@@ -27,7 +30,6 @@ HEADLINES_FILEPATH = 'datasets/news/crypto_news.csv'
 COIN_ID_MAP_FILEPATH = 'datasets/util/id_map.csv'
 
 LANGUAGE = "en"
-
 
 # ------------- Class -------------
 

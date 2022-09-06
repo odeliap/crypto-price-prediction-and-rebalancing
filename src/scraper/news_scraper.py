@@ -17,7 +17,6 @@ from newsapi import NewsApiClient
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
-
 # ------------- Constants -------------
 
 API_KEY = '681ea4f3f4de4f29a08687c9f692beed'

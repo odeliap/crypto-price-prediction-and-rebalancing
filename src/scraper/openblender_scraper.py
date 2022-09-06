@@ -23,7 +23,6 @@ ACTION = 'API_getObservationsFromDataset'
 PRICE_FILEPATH = 'datasets/price/crypto_index_prices.csv'
 NEWS_FILEPATH = 'datasets/news/openblender_news.csv'
 
-
 # ------------- Class -------------
 
 class OpenBlenderScraper:
@@ -63,7 +62,6 @@ class OpenBlenderScraper:
     def save_news_tweet_dataset(self) -> None:
         """
         Class to save crypto news tweet dataset 'CryptoCurrency News Tweet' from Open Blender
-        :return:
         """
         parameters = {
             'token': '63163a459516292b27215ea3IU1IFqxx7KdHD5fdPdfmgA1FijH8zF',
