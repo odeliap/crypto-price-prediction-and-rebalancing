@@ -8,7 +8,7 @@ import math
 
 import pandas as pd
 
-from datetime import datetime
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
 from util import dataframe_to_csv
@@ -50,7 +50,10 @@ PAGE_SIZE = 100
 
 COLUMN_NAMES = ['title', 'text', 'date', 'coin']
 
-FILEPATH = 'datasets/news/news.csv'
+today = date.today()
+TODAY = today.strftime("%m-%d-%Y")
+
+FILEPATH = f'datasets/news/news-{TODAY}.csv'
 
 # ------------- Class -------------
 
