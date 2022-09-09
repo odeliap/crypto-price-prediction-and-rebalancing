@@ -7,6 +7,8 @@ import logging
 
 import pandas as pd
 
+from datetime import date, datetime
+
 from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import json
@@ -23,10 +25,13 @@ logging.basicConfig(level=logging.INFO)
 NEWS_API_KEY = 'gvpifrrlnsffapoedsbpc0e7vucofq9saqnqjnsm'
 MARKET_API_KEY = '1b7fcdab-bbfd-4753-840c-e8c853121fd7'
 
-COLUMN_NAMES = ['title', 'text', 'date', 'coin']
+COLUMN_NAMES = ['title', 'text', 'timestamp', 'coin']
 COIN_ID_MAP_COLUMN_NAMES = ['slug', 'name', 'symbol']
 
-HEADLINES_FILEPATH = 'datasets/news/crypto_news.csv'
+today = date.today()
+TODAY = today.strftime("%m-%d-%Y")
+
+HEADLINES_FILEPATH = f'datasets/news/clean/crypto_news-{today}.csv'
 COIN_ID_MAP_FILEPATH = 'datasets/util/id_map.csv'
 
 LANGUAGE = "en"
@@ -58,9 +63,9 @@ class CryptoNewsScraper:
         data = json.loads(self.newsapi.getTopNews(LANGUAGE))['data']
         title = data['title']
         text = data['text']
-        date = data['date']
+        timestamp = datetime.utcfromtimestamp(int(data['date'])).strftime("%Y-%m-%d")
         tickers = ','.join(data['tickers'])
-        row = {'title': title, 'text': text, 'date': date, 'coin': tickers}
+        row = {'title': title, 'text': text, 'timestamp': timestamp, 'coin': tickers}
         self.headlines = self.headlines.append(row)
 
 
@@ -73,8 +78,8 @@ class CryptoNewsScraper:
             data = json.loads(self.newsapi.getTopNewsByCoin(slug))['data']
             title = data['title']
             text = data['text']
-            date = data['date']
-            row = {'title': title, 'text': text, 'date': date, 'coin': slug}
+            timestamp = datetime.utcfromtimestamp(int(data['date'])).strftime("%Y-%m-%d")
+            row = {'title': title, 'text': text, 'timestamp': timestamp, 'coin': slug}
             self.headlines = self.headlines.append(row)
 
 

@@ -48,12 +48,12 @@ START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(months=1) 
 SORT_BY = 'popularity'
 PAGE_SIZE = 100
 
-COLUMN_NAMES = ['title', 'text', 'date', 'coin']
+COLUMN_NAMES = ['title', 'text', 'timestamp', 'coin']
 
 today = date.today()
 TODAY = today.strftime("%m-%d-%Y")
 
-FILEPATH = f'datasets/news/news-{TODAY}.csv'
+FILEPATH = f'datasets/news/clean/news-{TODAY}.csv'
 
 # ------------- Class -------------
 
@@ -198,8 +198,10 @@ class NewsScraper:
         for article in articles:
             title = article.get('title')
             description = article.get('description')
-            publishedAt = article.get('publishedAt')
-            row = {'title': title, 'text': description, 'date': publishedAt, 'coin': ''}
+            publishedAt = article.get('publishedAt').replace('T', ' ').replace('Z', '')
+            space = publishedAt.index(' ')
+            timestamp = publishedAt[0:space]
+            row = {'title': title, 'text': description, 'timestamp': timestamp, 'coin': ''}
             logging.info(f'row: {row}')
             self.headlines = self.headlines.append(row, ignore_index=True)
         logging.info(f'updated headlines: {self.headlines}')
