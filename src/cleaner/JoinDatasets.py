@@ -27,7 +27,7 @@ if __name__ == "__main__":
             for filename in filenames:
                 filepaths = filepaths + [f'{directory}/{filename}']
             files = files + filepaths
-    
+
     for file in files:
         logging.info(file)
 
