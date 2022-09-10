@@ -42,4 +42,4 @@ def dataframe_to_csv(dataframe, filepath) -> None:
     logging.info('Saving dataframe to csv')
     os.makedirs('datasets', exist_ok=True)
     time.sleep(3)
-    dataframe.to_csv(filepath)
+    dataframe.to_csv(filepath, index=None)

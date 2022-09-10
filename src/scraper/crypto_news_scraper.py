@@ -31,8 +31,8 @@ COIN_ID_MAP_COLUMN_NAMES = ['slug', 'name', 'symbol']
 today = date.today()
 TODAY = today.strftime("%m-%d-%Y")
 
-HEADLINES_FILEPATH = f'datasets/news/clean/crypto_news-{today}.csv'
-COIN_ID_MAP_FILEPATH = 'datasets/util/id_map.csv'
+HEADLINES_FILEPATH = f'datasets/news/processed/cryptonewsapi_news.csv'
+COIN_ID_MAP_FILEPATH = 'datasets/util/cryptonewsapi_id_map.csv'
 
 LANGUAGE = "en"
 

@@ -1,5 +1,5 @@
 """
-Data scraper for news sources and crypto prices using Open Blender API
+Data scraper for news sources and crypto price using Open Blender API
 """
 
 # ------------- Libraries -------------
@@ -22,11 +22,11 @@ logging.basicConfig(level=logging.INFO)
 
 ACTION = 'API_getObservationsFromDataset'
 
-PRICE_FILEPATH = 'datasets/price/unprocessed/crypto_index_prices.csv'
+PRICE_FILEPATH = 'datasets/price/unprocessed/openblender_crypto_index_prices.csv'
 NEWS_FILEPATH = 'datasets/news/unprocessed/openblender_news.csv'
 
-CLEAN_PRICE_FILEPATH = 'datasets/price/clean/crypto_index_prices.csv'
-CLEAN_NEWS_FILEPATH = 'datasets/news/clean/openblender_news.csv'
+CLEAN_PRICE_FILEPATH = 'datasets/price/processed/openblender_crypto_index_prices.csv'
+CLEAN_NEWS_FILEPATH = 'datasets/news/processed/openblender_news.csv'
 
 # ------------- Class -------------
 

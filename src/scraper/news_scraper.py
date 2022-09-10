@@ -53,7 +53,7 @@ COLUMN_NAMES = ['title', 'text', 'timestamp', 'coin']
 today = date.today()
 TODAY = today.strftime("%m-%d-%Y")
 
-FILEPATH = f'datasets/news/clean/news-{TODAY}.csv'
+FILEPATH = f'datasets/news/processed/newsapi_news.csv'
 
 # ------------- Class -------------
 
