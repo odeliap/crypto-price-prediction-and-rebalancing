@@ -38,7 +38,7 @@ class SolanaProcessor:
         self.price_dataframe = clean_hms_timestamps(
             clean_data(
                 price_filepath,
-                save_columns=['timestamp', 'open', 'high', 'low'],
+                save_columns=['timestamp', 'open', 'high', 'low', 'price'],
                 rename_columns_dict={'Date': 'timestamp', 'High': 'high', 'Low': 'low', 'Open': 'open',
                                      'Close': 'close'}
             )

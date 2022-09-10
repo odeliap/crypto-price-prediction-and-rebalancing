@@ -17,11 +17,8 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-KEEP_COLUMNS = ['open', 'high', 'low', 'volume', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral',
-                'positive', 'price']
-
-FILEPATH = '' # TODO: put correct filepath
-OUTPUT_FILEPATH = '' # TODO: put correct output filepath
+KEEP_COLUMNS = ['open', 'high', 'low', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral',
+                'positive']
 
 # ------------- Class -------------
 
@@ -38,10 +35,10 @@ class SentimentAnalyzer:
 
         self.dataframe = pd.read_csv(filepath)
 
-        self.dataframe['headlines'] = self.clean_headlines()
+        self.dataframe['text'] = self.clean_headlines()
 
-        self.dataframe['subjectivity'] = self.dataframe['headlines'].apply(self.get_subjectivity)
-        self.dataframe['polarity'] = self.dataframe['headlines'].apply(self.get_polarity)
+        self.dataframe['subjectivity'] = self.dataframe['text'].apply(self.get_subjectivity)
+        self.dataframe['polarity'] = self.dataframe['text'].apply(self.get_polarity)
 
         self.daily_sentiment_score_retriever()
 
@@ -58,17 +55,19 @@ class SentimentAnalyzer:
         headlines = []
         clean_headlines = []
 
-        if 'headlines' in self.dataframe.columns:
-            headline_index = self.dataframe.columns.get_loc('headlines')
+        if 'text' in self.dataframe.columns:
+            headline_index = self.dataframe.columns.get_loc('text')
             for row in range(0, len(self.dataframe.index)):
                 headlines.append(' '.join(str(x) for x in self.dataframe.iloc[row, headline_index]))
         else:
-            raise Exception("'headlines' column not found in file; add 'headlines' column and rerun to proceed.")
+            raise Exception("'text' column not found in file; add 'text' column and rerun to proceed.")
 
         for i in range(0, len(headlines)):
             clean_headlines.append(re.sub("b[(')]", '', headlines[i])) # remove b'
             clean_headlines[i] = re.sub('b[(")]', '', clean_headlines[i]) # remove b"
             clean_headlines[i] = re.sub("\'", '', clean_headlines[i]) # remove \'
+
+        logging.info('cleaned headers')
 
         return clean_headlines
 
@@ -79,8 +78,8 @@ class SentimentAnalyzer:
         pos = []
         neu = []
 
-        for i in range(0, len(self.dataframe['headlines'])):
-            SIA = self.get_SIA(self.dataframe['headlines'][i])
+        for i in range(0, len(self.dataframe['text'])):
+            SIA = self.get_SIA(self.dataframe['text'][i])
             compound.append(SIA['compound'])
             neg.append(SIA['neg'])
             neu.append(SIA['neu'])
@@ -103,6 +102,7 @@ class SentimentAnalyzer:
         :return: subjectivity score for inputted text
         :rtype: float
         """
+        logging.info('getting subjectivity')
         return TextBlob(text).sentiment.subjectivity
 
 
@@ -117,6 +117,7 @@ class SentimentAnalyzer:
         :return: polarity score for inputted text
         :rtype float
         """
+        logging.info('getting polarity')
         return TextBlob(text).sentiment.polarity
 
 
@@ -131,6 +132,7 @@ class SentimentAnalyzer:
         :return: sentiment: Python dictionary of sentiment scores for inputted text
         :rtype dict[float]
         """
+        logging.info('getting SIA')
         sia = SentimentIntensityAnalyzer()
         sentiment = sia.polarity_scores(text)
         return sentiment
@@ -138,5 +140,17 @@ class SentimentAnalyzer:
 
 
 if __name__ == "__main__":
-    analyzer = SentimentAnalyzer(FILEPATH)
-    analyzer.dataframe.to_csv(OUTPUT_FILEPATH)
+    bitcoin_input_filepath = '../create_datasets/outputs/bitcoin_dataset.csv'
+    ethereum_input_filepath = '../create_datasets/outputs/ethereum_dataset.csv'
+    solana_input_filepath = '../create_datasets/outputs/solana_dataset.csv'
+
+    filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath]
+
+    for file in filepaths:
+        logging.info(f'processing file: {file}')
+        filename = file[file.rfind('/')+1:]
+        output_filename = filename.replace('dataset', 'sentiment_dataset')
+        output_filepath = f'outputs/{output_filename}'
+        analyzer = SentimentAnalyzer(file)
+        analyzer.dataframe.to_csv(output_filepath)
+        logging.info(f'finished processing {file}')

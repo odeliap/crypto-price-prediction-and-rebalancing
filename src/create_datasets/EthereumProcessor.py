@@ -26,7 +26,7 @@ class EthereumProcessor:
         """
         Initialize EthereumProcessor
         """
-        price_save_columns = ['timestamp', 'open', 'high', 'low']
+        price_save_columns = ['timestamp', 'open', 'high', 'low', 'price']
 
         self.news_dataframe = save_first_timestamp_only(
             clean_data(
