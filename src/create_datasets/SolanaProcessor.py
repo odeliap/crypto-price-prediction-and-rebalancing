@@ -6,7 +6,6 @@ Class to process collected solana datasets into cohesive dataset
 import logging
 
 import pandas as pd
-import datetime as dt
 
 from Utils import clean_data, utc_to_standard_timestamp, save_first_timestamp_only, clean_hms_timestamps
 
@@ -25,20 +24,18 @@ class SolanaProcessor:
         """
         Initialize SolanaProcessor
         """
-        self.news_dataframe = save_first_timestamp_only(
-            utc_to_standard_timestamp(
-                clean_data(
-                    news_filepath,
-                    save_columns=['timestamp', 'text'],
-                    rename_columns_dict={'created_utc': 'timestamp', 'body': 'text'}
-                )
+        self.news_dataframe = utc_to_standard_timestamp(
+            clean_data(
+                news_filepath,
+                save_columns=['timestamp', 'text'],
+                rename_columns_dict={'created_utc': 'timestamp', 'body': 'text'}
             )
         )
 
         self.price_dataframe = clean_hms_timestamps(
             clean_data(
                 price_filepath,
-                save_columns=['timestamp', 'open', 'high', 'low', 'price'],
+                save_columns=['timestamp', 'open', 'high', 'low'],
                 rename_columns_dict={'Date': 'timestamp', 'High': 'high', 'Low': 'low', 'Open': 'open',
                                      'Close': 'close'}
             )
@@ -52,9 +49,14 @@ class SolanaProcessor:
         :return: dataframe: clean combined dataframe
         :rtype pd.DataFrame
         """
+        self.news_dataframe['text'] = self.news_dataframe['text'].transform(lambda x: x.replace(',', ' ').replace('\n', ' '))
         combined_dataframe = pd.merge(self.price_dataframe, self.news_dataframe, on='timestamp', how='inner')
+
+        combined_dataframe['text'] = combined_dataframe.groupby(['timestamp'])['text'].transform(
+            lambda x: ' '.join(map(str, x)))
         combined_dataframe.dropna(inplace=True)
 
+        combined_dataframe = combined_dataframe.drop_duplicates(subset='timestamp', keep='first')
         return combined_dataframe
 
 
