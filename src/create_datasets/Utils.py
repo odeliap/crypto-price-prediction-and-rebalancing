@@ -41,20 +41,6 @@ def clean_data(
     return dataframe
 
 
-def save_first_timestamp_only(dataframe: pd.DataFrame):
-    """
-    Save first timestamp row, discard duplicates.
-
-    :param dataframe: dataframe to discard repeating timestamp records for
-    :type pd.DataFrame
-
-    :return: dataframe: de-duplicated dataframe
-    :rtype pd.DataFrame
-    """
-    dataframe['timestamp'] = dataframe['timestamp'].map(lambda x: x[0:x.index(' ')])
-    return dataframe
-
-
 def clean_hms_timestamps(dataframe: pd.DataFrame):
     """
     Convert yyyy-mm-dd hh:mm:ss timestamp to yyyy-mm-dd timestamps
