@@ -8,3 +8,5 @@ OpenBlender
 vaderSentiment
 textblob
 sklearn
+bs4
+tensorflow

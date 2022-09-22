@@ -30,7 +30,7 @@ CLEAN_NEWS_FILEPATH = 'datasets/news/processed/openblender_news.csv'
 
 # ------------- Class -------------
 
-class OpenBlenderScraper:
+class OpenBlenderApiScraper:
     """
     Class to scrape news using Open Blender API
     """
@@ -39,7 +39,7 @@ class OpenBlenderScraper:
         self
     ) -> None:
         """
-        Instantiate a news scraper object.
+        Instantiate an open blender api scraper object.
         """
         self.save_price_dataset()
         self.save_news_tweet_dataset()
@@ -120,4 +120,4 @@ class OpenBlenderScraper:
 
 
 if __name__ == "__main__":
-    scraper = OpenBlenderScraper()
+    scraper = OpenBlenderApiScraper()

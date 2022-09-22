@@ -38,7 +38,7 @@ LANGUAGE = "en"
 
 # ------------- Class -------------
 
-class CryptoNewsScraper:
+class CryptoNewsApiScraper:
     """
     Class to scrape news using python crypto news API
     """
@@ -47,7 +47,7 @@ class CryptoNewsScraper:
         self
     ) -> None:
         """
-        Instantiate a news scraper object.
+        Instantiate a crypto news api scraper object.
         """
         self.newsapi = CryptoControlAPI(apiKey=NEWS_API_KEY) # Connect to the CrytpoControl API
 
@@ -125,7 +125,7 @@ class CryptoNewsScraper:
 
 if __name__ == "__main__":
     # TODO: fix api call, getting bad request
-    scraper = CryptoNewsScraper()
+    scraper = CryptoNewsApiScraper()
     scraper.get_top_news()
     scraper.get_top_news_by_coin()
     dataframe_to_csv(scraper.headlines, HEADLINES_FILEPATH)

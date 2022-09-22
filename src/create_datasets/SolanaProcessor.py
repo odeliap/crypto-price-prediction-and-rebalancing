@@ -7,7 +7,7 @@ import logging
 
 import pandas as pd
 
-from Utils import clean_data, utc_to_standard_timestamp, save_first_timestamp_only, clean_hms_timestamps
+from Utils import clean_data, utc_to_standard_timestamp, clean_hms_timestamps
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)

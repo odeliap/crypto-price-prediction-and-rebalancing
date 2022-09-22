@@ -57,7 +57,7 @@ FILEPATH = f'datasets/news/processed/newsapi_news.csv'
 
 # ------------- Class -------------
 
-class NewsScraper:
+class NewsApiScraper:
     """
     Class to scrape news using news API
     """
@@ -66,7 +66,7 @@ class NewsScraper:
         self
     ) -> None:
         """
-        Instantiate a news scraper object.
+        Instantiate a news api scraper object.
         """
         self.newsapi = NewsApiClient(api_key=API_KEY)
 
@@ -222,7 +222,7 @@ class NewsScraper:
 
 
 if __name__ == "__main__":
-    scraper = NewsScraper()
+    scraper = NewsApiScraper()
     scraper.get_all_headlines()
     scraper.get_top_headlines()
     dataframe_to_csv(scraper.headlines, FILEPATH)
