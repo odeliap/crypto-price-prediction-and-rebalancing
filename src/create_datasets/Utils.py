@@ -24,13 +24,13 @@ def clean_data(
     Clean data.
 
     :param filepath: path to news file to clean
-    :type str
+    :type: str
 
     :param save_columns: list of columns to save
-    :type List[str]
+    :type: List[str]
 
     :param rename_columns_dict: dictionary mapping existing column names to new column names
-    :type dict
+    :type: dict
 
     :return: dataframe: cleaned dataframe
     :rtype pd.DataFrame
@@ -46,7 +46,7 @@ def clean_hms_timestamps(dataframe: pd.DataFrame):
     Convert yyyy-mm-dd hh:mm:ss timestamp to yyyy-mm-dd timestamps
 
     :param dataframe: dataframe to clean timestamps for
-    :type pd.DataFrame
+    :type: pd.DataFrame
 
     :return: dataframe: dataframe with cleaned timestamps
     :rtype pd.DataFrame
@@ -60,7 +60,7 @@ def utc_to_standard_timestamp(dataframe: pd.DataFrame):
     Convert epoch timestamp to yyyy-mm-dd timestamps
 
     :param dataframe: dataframe to clean timestamps for
-    :type pd.DataFrame
+    :type: pd.DataFrame
 
     :return: dataframe: dataframe with cleaned timestamps
     :rtype pd.DataFrame

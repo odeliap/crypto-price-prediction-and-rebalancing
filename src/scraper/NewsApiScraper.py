@@ -11,7 +11,6 @@ import pandas as pd
 from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
-from util import dataframe_to_csv
 from newsapi import NewsApiClient
 
 # Set logging level
@@ -30,7 +29,7 @@ START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(months=1) 
 SORT_BY = 'popularity'
 PAGE_SIZE = 100
 
-COLUMN_NAMES = ['title', 'text', 'timestamp', 'coin']
+COLUMN_NAMES = ['text', 'timestamp']
 
 today = date.today()
 TODAY = today.strftime("%m-%d-%Y")
@@ -51,8 +50,8 @@ class NewsApiScraper:
         """
         Instantiate a news api scraper object.
 
-        :param coin: name of coin to get news for
-        :type str
+        :param coin: coin to search for news on
+        :type: str
         """
         self.newsapi = NewsApiClient(api_key=API_KEY)
 
@@ -104,7 +103,7 @@ class NewsApiScraper:
         Send news api get everything request.
 
         :param page: defaulted to 1
-        :type int
+        :type: int
 
         :return headlines: news api dictionary result
         :rtype dict
@@ -129,7 +128,7 @@ class NewsApiScraper:
         Send news api top headlines request.
 
         :param page: defaulted to 1
-        :type int
+        :type: int
 
         :return headlines: news api dictionary result
         :rtype dict
@@ -178,7 +177,7 @@ class NewsApiScraper:
         self.headlines.
 
         :param dictionary: news api Python dictionary result.
-        :type dict
+        :type: dict
         """
         logging.info(f'dictionary: {dictionary}')
         articles = dictionary.get('articles')
@@ -188,7 +187,7 @@ class NewsApiScraper:
             publishedAt = article.get('publishedAt').replace('T', ' ').replace('Z', '')
             space = publishedAt.index(' ')
             timestamp = publishedAt[0:space]
-            row = {'title': title, 'text': description, 'timestamp': timestamp, 'coin': ''}
+            row = {'text': title + ' ' + description, 'timestamp': timestamp}
             logging.info(f'row: {row}')
             self.headlines = self.headlines.append(row, ignore_index=True)
         logging.info(f'updated headlines: {self.headlines}')
@@ -200,15 +199,16 @@ class NewsApiScraper:
         Get remaining pages to sort through.
 
         :param total_results: total results returned from news api query
-        :type int
+        :type: int
 
         :return remaining_pages: remaining pages in query
-        :type int
+        :type: int
         """
         return math.ceil((total_results - 100)/100)
 
 
-def main(coin):
+def main(coin: str) -> str:
     scraper = NewsApiScraper(coin)
     scraper.get_all_headlines()
     scraper.get_top_headlines()
+    return scraper.headlines['text']

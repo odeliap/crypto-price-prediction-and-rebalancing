@@ -17,10 +17,10 @@ def merge(dictionary1: dict, dictionary2: dict):
     Merges two dictionaries into single dictionary.
 
     :param dictionary1: first dictionary
-    :type dict
+    :type: dict
 
     :param dictionary2: second dictionary
-    :type dict
+    :type: dict
 
     :return Python dictionary.
     :rtype dict
@@ -34,10 +34,10 @@ def dataframe_to_csv(dataframe, filepath) -> None:
     Save dataframe as csv file to datasets directory.
 
     :param dataframe: pandas dataframe to save as csv
-    :type pd.DataFrame
+    :type: pd.DataFrame
 
     :param filepath: filepath where to save dataframe to
-    :type str
+    :type: str
     """
     logging.info('Saving dataframe to csv')
     os.makedirs('datasets', exist_ok=True)

@@ -23,20 +23,20 @@ pagesToGet = 1
 
 
 # ------------- Class -------------
-class Scraper:
+class ScratchScraper:
 
     def __init__(self, urls: List[str], filename: str, coin: str):
         """
         Initialize Scraper object.
 
         :param urls: list of urls to scrape data for
-        :type List[str]
+        :type: List[str]
 
         :param filename: file to save scraped data to
-        :type str
+        :type: str
 
         :param coin: coin to scrape data for
-        :type str
+        :type: str
         """
         self.upperframe = []
         self.file = open(filename, "w", encoding = 'utf-8')
@@ -63,7 +63,7 @@ class Scraper:
         Makes a simple get request (fetches a page).
 
         :param url: url to get request for
-        :type str
+        :type: str
 
         :return: page: response from get request
         :rtype requests.Response
@@ -86,12 +86,10 @@ class Scraper:
         Queries page contents for text substring.
 
         :param page: page to scrape text for
-        :type requests.Response
+        :type: requests.Response
 
         :param text: text to query page contents for
-        :type str
-
-        :return:
+        :type: str
         """
         if text in page.text:
             soup = BeautifulSoup(page.text, 'html.parser')
@@ -127,4 +125,4 @@ if __name__ == "__main__":
 
     for coin in cryptocurrencies:
         filename = f'{coin.lower()}_scraped_news.csv'
-        scraper = Scraper(urls, f'{directory}/{filename}', coin)
+        scraper = ScratchScraper(urls, f'{directory}/{filename}', coin)
