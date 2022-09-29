@@ -10,8 +10,8 @@ To set this version, I used `pyenv` (common python version management tool). To 
 the directions at the [pyenv repository](https://github.com/pyenv/pyenv#getting-pyenv).
 
 ```commandline
-pyenv install 3.9.7
-pyenv local 3.9.7
+pyenv install 3.9.12
+pyenv local 3.9.12
 ```
 
 This project uses `venv` for the virtual environment and install the necessary libraries.
