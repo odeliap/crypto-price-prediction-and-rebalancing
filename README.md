@@ -53,3 +53,15 @@ open -a"Google Chrome" index.html
 
 This example uses __Google Chrome__, but you can replace `Google Chrome` with the browser of your choice 
 in the command above. This should open the documentation in this browser.
+
+
+## Run Streamlit App
+
+To run the streamlit app, type in the terminal at the root of this project
+
+```commandline
+streamlit run src/app.py
+```
+
+The terminal will display a `localhost` link from this command. Press this link and open the page or copy-paste the 
+link into your browser, and the app should appear!
