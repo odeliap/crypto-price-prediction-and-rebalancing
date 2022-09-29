@@ -23,24 +23,6 @@ API_KEY = '681ea4f3f4de4f29a08687c9f692beed'
 
 CATEGORIES = ['business', 'technology']
 
-# list of coins of interest from: https://coinmarketcap.com
-COINS = ['Tether', 'USD Coin', 'BNB', 'Binance USD', 'Cardano', 'XRP', 'Solana', 'Dogecoin',
-            'Polkadot', 'Polygon', 'Shiba Inu', 'Dai', 'TRON', 'Avalanche', 'UNUS SED LEO',
-            'Wrapped Bitcoin', 'Uniswap', 'Etherum Classic', 'Litecoin', 'Cosmos', 'Chainlink',
-            'FTX Token', 'NEAR Protocol', 'Cronos', 'Monero', 'Stellar', 'Bitcoin Cash',
-            'Algorand', 'Flow', 'VeChain', 'Filecoin', 'Internet Computer', 'Decentraland', 'EOS',
-            'ApeCoin', 'The Sandbox', 'Tezos', 'Hedera', 'Chiliz', 'Aave', 'Axie Infinity',
-            'Elrond', 'Theta Network', 'Quant', 'TrueUSD', 'Bitcoin SV', 'Zcash', 'Pax Dollar']
-
-# list of keywords built off: https://time.com/nextadvisor/investing/cryptocurrency/crypto-terms-you-should-know-before-investing/
-KEYWORDS = ['Altcoin', 'Bitcoin', 'Block', 'Blockchain', 'Coin', 'Coinbase', 'Cold Wallet',
-            'Cold Storage', 'Crypto', 'Cryptocurrency', 'Decentralization', 'DeFi', 'DApps',
-            'Digital Gold', 'Ethereum', 'Exchange', 'Fork', 'Genesis Block', 'HODL', 'Halving',
-            'Hash', 'Hot Wallet', 'Initial Coin Offering', 'ICO', 'Market Capitalization',
-            'Mining', 'Node', 'Non-fungible Tokens', 'NFTs', 'Peer-to-peer', 'Public Key',
-            'Private Key', 'Satoshi Nakomoto', 'Smart Contract', 'Stablecoin', 'Digital Fiat',
-            'Token', 'Vitalik Buterin', 'Wallet']
-
 COUNTRY = 'us'
 DATE_FORMAT = '%Y-%m-%d'
 END_DATE = datetime.today().strftime(DATE_FORMAT) # Set scraping end date
@@ -63,18 +45,21 @@ class NewsApiScraper:
     """
 
     def __init__(
-        self
+        self,
+        coin: str
     ) -> None:
         """
         Instantiate a news api scraper object.
+
+        :param coin: name of coin to get news for
+        :type str
         """
         self.newsapi = NewsApiClient(api_key=API_KEY)
 
         self.headlines = pd.DataFrame(columns=COLUMN_NAMES)
         self.daily_api_requests = 100
 
-        self.keywords = 'crypto' # TODO: find way to query on all keywords and coins
-        # self.keywords = ','.join(KEYWORDS + COINS)
+        self.keywords = coin
         self.sources = self.get_all_sources()
 
 
@@ -83,15 +68,16 @@ class NewsApiScraper:
         Gets all the headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_all_headlines()
-        # TODO: find way to access more results (increase plan?)
+        # TODO: FIXME (may require increasing plan)
         """
         if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
-                if self.daily_api_requests > 0:
-                    remaining_pages = self.remaining_pages(total_results)
-                    for page in range(2, remaining_pages + 2):
+                remaining_pages = self.remaining_pages(total_results)
+                for page in range(2, remaining_pages + 2):
+                    if self.daily_api_requests > 0:
                         self.base_get_all_headlines(page)
+                        self.daily_api_requests -= 1
         """
 
 
@@ -100,15 +86,16 @@ class NewsApiScraper:
         Gets all top headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_top_headlines()
-        # TODO: find way to access more results (increase plan?)
+        # TODO: FIXME (may require increasing plan)
         """
         if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
-                while self.daily_api_requests > 0:
-                    remaining_pages = self.remaining_pages(total_results)
-                    for page in range(2, remaining_pages + 2):
+                remaining_pages = self.remaining_pages(total_results)
+                for page in range(2, remaining_pages + 2):
+                    if self.daily_api_requests > 0:
                         self.base_get_top_headlines(page)
+                        self.daily_api_requests -= 1
         """
 
 
@@ -221,8 +208,7 @@ class NewsApiScraper:
         return math.ceil((total_results - 100)/100)
 
 
-if __name__ == "__main__":
-    scraper = NewsApiScraper()
+def main(coin):
+    scraper = NewsApiScraper(coin)
     scraper.get_all_headlines()
     scraper.get_top_headlines()
-    dataframe_to_csv(scraper.headlines, FILEPATH)
