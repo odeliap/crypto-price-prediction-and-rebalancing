@@ -177,8 +177,12 @@ def main(coin: str, filepath: str):
 
 
 if __name__ == "__main__":
+    """
     coins = ['bitcoin', 'ethereum', 'solana']
 
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
+    """
+    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    main('bitcoin', filepath)

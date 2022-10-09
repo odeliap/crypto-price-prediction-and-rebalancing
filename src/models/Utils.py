@@ -91,10 +91,10 @@ def comparisonGraph(y_true, y_pred, coin):
     :param coin: name of related coin
     :type: str
     """
-    days_passed = y_true.size
-    time = np.arrange(days_passed)
-    plt.plot(time, y_true, '#FFCOCB', label='Actual Price')
-    plt.plot(time, y_pred, '#ADD&E6', label='Predicted Price')
+    days_passed = len(y_pred)
+    time = np.arange(days_passed)
+    plt.plot(time, y_true, 'red', label='Actual Price')
+    plt.plot(time, y_pred, 'blue', label='Predicted Price')
     plt.xlabel('Time[days]')
     plt.ylabel('Price')
     plt.title(f'{coin.capitalize()} price prediction')

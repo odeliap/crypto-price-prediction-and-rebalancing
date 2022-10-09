@@ -1,5 +1,5 @@
 """
-Sample non-LSTM sentiment model
+Sample non-LSTM sentiment model (predicts price increase/decrease only)
 
 Closely modeled after tutorial model (Spring Seminar tutorial)
 """
@@ -9,6 +9,7 @@ import logging
 
 import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.metrics import classification_report
 
 import numpy as np
 
@@ -35,12 +36,22 @@ class SampleSentimentModel:
         :param priceLabel: column header for price column
         :type: str
         """
-        keep_columns = ['subjectivity', 'polarity', 'compound', 'negative' 'neutral', 'positive']
+        drop_columns = ['open', 'high', 'low']
         features = dataframe
-        features = np.array(features[keep_columns], 1)
+        features = np.array(features.drop(drop_columns, axis=1))
         price_data = np.array(dataframe[priceLabel])
 
-        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, price_data)
+        label_price_data = []
+
+        previous_price = 0
+        for price in price_data:
+            if price > previous_price:
+                label_price_data.append(1)
+            else:
+                label_price_data.append(0)
+            previous_price = price
+
+        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, label_price_data)
 
         self.model = LinearDiscriminantAnalysis().fit(self.x_train, self.y_train)
         saveModel(self.model, modelSavedPath)
@@ -89,12 +100,17 @@ def main(coin: str, filepath: str):
 
     model = SampleSentimentModel(dataframe, 'open')
     predictions = model.predict(model.x_test)
+    logging.info(classification_report(model.y_test, predictions))
     comparisonGraph(model.y_test, predictions, coin)
 
 
 if __name__ == "__main__":
+    """
     coins = ['bitcoin', 'ethereum', 'solana']
 
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
+    """
+    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    main('bitcoin', filepath)
