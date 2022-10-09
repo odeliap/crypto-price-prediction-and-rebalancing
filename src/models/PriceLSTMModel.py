@@ -18,7 +18,7 @@ import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler
 
-from Utils import data_split, convergePrices
+from Utils import data_split, convergePrices, saveModel, loadModel, comparisonGraph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -29,6 +29,8 @@ SEQ_LEN = 100
 DROPOUT = 0.2
 WINDOW_SIZE = SEQ_LEN - 1
 BATCH_SIZE = 64
+
+modelSavedPath = './outputs/PriceLSTMModel.sav'
 
 # ------------- Class -------------
 class PriceLSTMModel:
@@ -62,6 +64,7 @@ class PriceLSTMModel:
 
         self.model.add(Dense(units=1))
         self.model.add(Activation('linear'))
+        saveModel(self.model, modelSavedPath)
 
 
     @staticmethod
@@ -101,7 +104,7 @@ class PriceLSTMModel:
         X = data[:, :-1, :]
         Y = data[:, -1, :]
 
-        x_train, y_train, x_test, y_test = data_split(X, Y, train_split)
+        x_train, x_test, y_train, y_test = data_split(X, Y, train_split)
 
         return x_train, y_train, x_test, y_test
 
@@ -132,10 +135,24 @@ class PriceLSTMModel:
 
         :return prediction: predicted price
         """
-        scaled_predicted = self.model.predict(input_data)
-        prediction = self.scaler.inverse_transform(scaled_predicted)
+        scaled_predictions = self.model.predict(input_data)
+        predictions = self.scaler.inverse_transform(scaled_predictions)
 
-        return prediction
+        return predictions
+
+
+def predict(input_data):
+    """
+    Predict price for input data based on saved model.
+
+    :param input_data: input or x data
+
+    :return predictions: predicted prices
+    """
+    loaded_model = loadModel(modelSavedPath)
+    scaled_predictions = loaded_model.predict(input_data)
+    predictions = MinMaxScaler().inverse_transform(scaled_predictions)
+    return predictions
 
 
 def main(coin: str, filepath: str):
@@ -156,7 +173,12 @@ def main(coin: str, filepath: str):
 
     model = PriceLSTMModel(dataframe, 'open')
     predictions = model.predict(model.x_test)
-    return predictions
+    comparisonGraph(model.y_test, predictions, coin)
 
 
-# TODO: add method to compare predictions against actual prices y_test
+if __name__ == "__main__":
+    coins = ['bitcoin', 'ethereum', 'solana']
+
+    for coin in coins:
+        filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
+        main(coin, filepath)

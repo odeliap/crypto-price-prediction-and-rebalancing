@@ -11,3 +11,4 @@ sklearn
 bs4
 tensorflow
 streamlit
+matplotlib

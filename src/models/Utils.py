@@ -5,9 +5,12 @@ Utils for models and model evaluation
 # ----------- Libraries -----------
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
+
+import pickle
 
 
 # ----------- Functions -----------
@@ -23,10 +26,10 @@ def data_split(input_data, output_data, split = 0.2):
     :param split: train-test split
     :type: double
 
-    :return x_train, y_train, x_test, y_test: the training and validation sets for each of input and output data
+    :return x_train, x_test, y_train, y_test: the training and validation sets for each of input and output data
     """
-    x_train, y_train, x_test, y_test = train_test_split(input_data, output_data, test_size = split, random_state = 0)
-    return x_train, y_train, x_test, y_test
+    x_train, x_test, y_train, y_test = train_test_split(input_data, output_data, test_size = split, random_state = 0)
+    return x_train, x_test, y_train, y_test
 
 
 def convergePrices(dataframe: pd.DataFrame, priceLabel: str) -> np.ndarray:
@@ -51,3 +54,48 @@ def convergePrices(dataframe: pd.DataFrame, priceLabel: str) -> np.ndarray:
     scaled_close = scaled_close.reshape(-1, 1) # reshape after removing nans
 
     return scaled_close
+
+
+def saveModel(model, fullyQualifiedFilepath):
+    """
+    Save model to file.
+
+    :param model: neural network
+
+    :param fullyQualifiedFilepath: file path to save model to
+    :type: str
+    """
+    pickle.dump(model, open(fullyQualifiedFilepath, 'wb'))
+
+
+def loadModel(fullyQualifiedFilepath):
+    """
+    Load model from path.
+
+    :param fullyQualifiedFilepath: file path to saved model
+    :type: str
+    """
+    return pickle.load(open(fullyQualifiedFilepath), 'rb')
+
+
+def comparisonGraph(y_true, y_pred, coin):
+    """
+    Create a graph comparing actual and predicted values.
+
+    :param y_true: actual values
+    :type: 1d array-like
+
+    :param y_pred: predicted values
+    :type: 1d array-like
+
+    :param coin: name of related coin
+    :type: str
+    """
+    days_passed = y_true.size
+    time = np.arrange(days_passed)
+    plt.plot(time, y_true, '#FFCOCB', label='Actual Price')
+    plt.plot(time, y_pred, '#ADD&E6', label='Predicted Price')
+    plt.xlabel('Time[days]')
+    plt.ylabel('Price')
+    plt.title(f'{coin.capitalize()} price prediction')
+    plt.show()

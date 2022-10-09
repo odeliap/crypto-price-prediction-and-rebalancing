@@ -10,14 +10,16 @@ import logging
 import pandas as pd
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
-from Utils import data_split
+import numpy as np
+
+from Utils import data_split, saveModel, loadModel, comparisonGraph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-
+modelSavedPath = './outputs/SampleSentimentModel.sav'
 
 # ----------- Class -----------
 
@@ -33,12 +35,15 @@ class SampleSentimentModel:
         :param priceLabel: column header for price column
         :type: str
         """
-        features = dataframe['subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']
-        price_data = dataframe[priceLabel]
+        keep_columns = ['subjectivity', 'polarity', 'compound', 'negative' 'neutral', 'positive']
+        features = dataframe
+        features = np.array(features[keep_columns], 1)
+        price_data = np.array(dataframe[priceLabel])
 
-        self.x_train, self.y_train, self.x_test, self.y_test = data_split(features, price_data)
+        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, price_data)
 
         self.model = LinearDiscriminantAnalysis().fit(self.x_train, self.y_train)
+        saveModel(self.model, modelSavedPath)
 
 
     def predict(self, input_data):
@@ -51,6 +56,19 @@ class SampleSentimentModel:
         """
         predictions = self.model.predict(input_data)
         return predictions
+
+
+def predict(input_data):
+    """
+    Predict price for input data based on saved model.
+
+    :param input_data: input or x data
+
+    :return predictions: predicted prices
+    """
+    loaded_model = loadModel(modelSavedPath)
+    predictions = loaded_model.predict(input_data)
+    return predictions
 
 
 def main(coin: str, filepath: str):
@@ -71,7 +89,12 @@ def main(coin: str, filepath: str):
 
     model = SampleSentimentModel(dataframe, 'open')
     predictions = model.predict(model.x_test)
-    return predictions
+    comparisonGraph(model.y_test, predictions, coin)
 
 
-# TODO: add method to compare predictions against actual prices y_test
+if __name__ == "__main__":
+    coins = ['bitcoin', 'ethereum', 'solana']
+
+    for coin in coins:
+        filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
+        main(coin, filepath)
