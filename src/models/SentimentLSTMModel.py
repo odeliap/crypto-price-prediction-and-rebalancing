@@ -11,7 +11,6 @@ import logging
 import pandas as pd
 
 import datetime
-import pickle
 
 from keras.layers import Dense
 from keras.layers import LSTM
@@ -76,37 +75,6 @@ class SentimentLSTMModel:
 
         result = rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
         self.scaler.inverse_transform(result)
-
-
-    @staticmethod
-    def rewrite_file(dataframe, coin):
-        """
-        Save csv to object file.
-
-        :param dataframe: dataframe to rewrite to object file
-        :type: pd.DataFrame
-
-        :param coin: coin of interest
-        :type: str
-
-        :return object_file: object version of file
-        """
-        new_data = dataframe.loc[:,
-                   ['open', 'timestamp', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']]
-        new_data.info()
-
-        date = new_data.timestamp.values
-        dates = []
-        for i in date:
-            dates.append(i.split('/')[0])
-        new_data['timestamp'] = dates
-
-        filehandler = open(f'outputs/{coin}.obj', "wb")
-        pickle.dump(new_data, filehandler)
-
-        file = open(f'outputs/{coin}.obj', 'rb')
-        object_file = pickle.load(file)
-        return object_file
 
 
     def preprocess(self, dataframe, train_size, test_size):
