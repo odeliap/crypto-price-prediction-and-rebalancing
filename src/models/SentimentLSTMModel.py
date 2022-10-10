@@ -2,218 +2,221 @@
 LSTM neural network with date and sentiment inputs.
 
 Made by following tutorial:
-https://www.analyticsvidhya.com/blog/2020/10/multivariate-multi-step-time-series-forecasting-using-stacked-lstm-sequence-to-sequence-autoencoder-in-tensorflow-2-0-keras/
+https://www.kaggle.com/code/sushantjha8/multiple-input-and-single-output-in-keras
 """
 
 # ------------- Libraries -------------
 import logging
 
-import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 
+import datetime
+import pickle
+
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.models import Model
+from keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import mean_absolute_error
 import tensorflow as tf
-import os
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-train_split = 0.80
-look_back = 3
-
-n_past = 10
-n_future = 5
-n_features = 7
+train_split = 0.75
 
 # ------------- Class -------------
 
 class SentimentLSTMModel:
 
-    def __init__(self, dataframe: pd.DataFrame):
+    def __init__(self, dataframe: pd.DataFrame, coin: str):
         """
         Initialize SentimentLSTMModel
 
         :param dataframe: pandas dataframe to process
         :type: pd.DataFrame
+
+        :param coin: coin of interest
+        :type: str
         """
         self.dataframe = dataframe
-        train, test = self.preprocess()
 
-        self.X_train, self.y_train = self.split_input_output(train)
-        self.X_test, self.y_test = self.split_input_output(test)
+        self.scaler = MinMaxScaler(feature_range=(0,1))
 
+        self.coin = coin
 
-    def construct_e1d1_model(self):
-        """
-        Construct E1D1 model (Sequence to Sequence Model with one encoder layer and one decoder layer).
-        """
-        encoder_inputs = tf.keras.layers.Input(shape=(n_past, n_features))
-        encoder_l1 = tf.keras.layers.LSTM(100, return_state=True)
-        encoder_outputs1 = encoder_l1(encoder_inputs)
+        train_size = int(len(dataframe) * train_split)
+        test_size = len(dataframe) - train_size
 
-        encoder_states1 = encoder_outputs1[1:]
+        new_data = self.dataframe.loc[:,
+                   ['open', 'timestamp', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']]
+        new_data.info()
 
-        decoder_inputs = tf.keras.layers.RepeatVector(n_future)(encoder_outputs1[0])
+        date = new_data.timestamp.values
+        dates = []
+        for i in date:
+            dates.append(i.split('/')[0])
+        new_data['timestamp'] = dates
 
-        decoder_l1 = tf.keras.layers.LSTM(100, return_sequences=True)(decoder_inputs, initial_state = encoder_states1)
-        decoder_outputs1 = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(n_features))(decoder_l1)
+        timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test = self.preprocess(new_data, train_size, test_size)
 
-        self.model_e1d1 = tf.keras.models.Model(encoder_inputs, decoder_outputs1)
+        logdir="logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
-        self.model_e1d1.summary()
+        rnn = self.buildModel(1)
+        rnn.fit([timestamp_train, subjectivity_train, polarity_train, compound_train, negative_train, neutral_train, positive_train],
+                [open_train],
+                validation_data = ([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test], [open_test]),
+                epochs = 1,
+                batch_size = 10,
+                callbacks = [tensorboard_callback]
+                )
 
-
-    def construct_e2d2_model(self):
-        """
-        Construct E2D2 model (Sequence to Sequence Model with two encoder layers and two decoder layers).
-        """
-        encoder_inputs = tf.keras.layers.Input(shape=(n_past, n_features))
-        encoder_l1 = tf.keras.layers.LSTM(100, return_sequences=True, return_state=True)
-        encoder_outputs1 = encoder_l1(encoder_inputs)
-        encoder_states1 = encoder_outputs1[1:]
-        encoder_l2 = tf.keras.layers.LSTM(100, return_state = True)
-        encoder_outputs2 = encoder_l2(encoder_outputs1[0])
-        encoder_states2 = encoder_outputs2[1:]
-
-        decoder_inputs = tf.keras.layers.RepeatVector(n_future)(encoder_outputs2[0])
-
-        decoder_l1 = tf.keras.layers.LSTM(100, return_sequences=True)(decoder_inputs, initial_state = encoder_states1)
-        decoder_l2 = tf.keras.layers.LSTM(100, return_sequences=True)(decoder_l1, initial_state = encoder_states2)
-        decoder_outputs2 = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(n_features))(decoder_l2)
-
-        self.model_e2d2 = tf.keras.models.Model(encoder_inputs, decoder_outputs2)
-        self.model_e2d2.summary()
-
-
-    def split_input_output(self, dataframe):
-        """
-        Split dataframe into input and output datasets.
-
-        :param dataframe: dataframe to split
-        :type: pd.DataFrame
-
-        :return X, y: input and output datasets
-        """
-        X, y = self.split_series(dataframe.values, n_past, n_future)
-        X = X.reshape((X.shape[0], X.shape[1], n_features))
-        y = y.reshape((y.shape[0], y.shape[1], n_features))
-        return X, y
-
-
-    def split_data(self):
-        """
-        Split data into train and test dataframes.
-        """
-        dataframe_len = len(self.dataframe)
-        train_len = int(dataframe_len * train_split)
-        train_dataframe, test_dataframe = self.dataframe[1:train_len], self.dataframe[train_len:]
-        return train_dataframe, test_dataframe
-
-
-    def preprocess(self):
-        """
-        Preprocess data.
-
-        :return train, test
-        """
-        scaler = MinMaxScaler(feature_range=(-1, 1))
-
-        self.train_dataframe, self.test_dataframe = self.split_data()
-
-        train = self.train_dataframe
-
-        self.scalers = {}
-        for i in train.columns:
-            s_s = scaler.fit_transform(train[i].values.reshape(-1, 1))
-            s_s = np.reshape(s_s, len(s_s))
-            self.scalers['scaler_' + i] = scaler
-            train[i] = s_s
-
-        test = self.test_dataframe
-
-        for i in self.train_dataframe.columns:
-            scaler = self.scalers['scaler_' + i]
-            s_s = scaler.transform(test[i].values.reshape(-1, 1))
-            s_s = np.reshape(s_s, len(s_s))
-            self.scalers['scaler_' + i] = scaler
-            test[i] = s_s
-
-        return train, test
+        result = rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
+        self.scaler.inverse_transform(result)
 
 
     @staticmethod
-    def split_series(series, n_past, n_future):
+    def rewrite_file(dataframe, coin):
         """
-        Transform series into samples using sliding window approach.
+        Save csv to object file.
 
-        :param series: series to transform
+        :param dataframe: dataframe to rewrite to object file
+        :type: pd.DataFrame
 
-        :param n_past: number of past observations
+        :param coin: coin of interest
+        :type: str
 
-        :param n_future: number of future observations
+        :return object_file: object version of file
         """
-        X, y = list(), list()
+        new_data = dataframe.loc[:,
+                   ['open', 'timestamp', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']]
+        new_data.info()
 
-        for window_start in range(len(series)):
-            past_end = window_start + n_past
-            future_end = past_end + n_future
-            if future_end > len(series):
-                break
-            past, future = series[window_start:past_end, :], series[past_end:future_end, :]
-            X.append(past)
-            y.append(future)
-        return np.array(X), np.array(y)
+        date = new_data.timestamp.values
+        dates = []
+        for i in date:
+            dates.append(i.split('/')[0])
+        new_data['timestamp'] = dates
+
+        filehandler = open(f'outputs/{coin}.obj', "wb")
+        pickle.dump(new_data, filehandler)
+
+        file = open(f'outputs/{coin}.obj', 'rb')
+        object_file = pickle.load(file)
+        return object_file
 
 
-    def train(self):
+    def preprocess(self, dataframe, train_size, test_size):
         """
-        Train models.
+        Preprocess data.
+
+        :param dataframe: dataframe to process
+
+        :param train_size: size of training set
+
+        :param test_size: size of testing set
+
+        :return timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test: training and testing sets for each column
         """
-        reduce_lr = tf.keras.callbacks.LearningRateScheduler(lambda x: 1e-3 * 0.90 ** x)
-        self.model_e1d1.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.Huber())
-        history_e1d1 = self.model_e1d1.fit(self.X_train, self.y_train, epochs=25, validation_data=(self.X_test, self.y_test), batch_size=32, verbose=0, callbacks=[reduce_lr])
-        self.model_e2d2.compile(optimizer=tf.keras.optimizers.Adam(), loss=tf.keras.losses.Huber())
-        history_e2d2 = self.model_e2d2.fit(self.X_train, self.y_train, epochs=25, validation_data=(self.X_test, self.y_test), batch_size=32, verbose=0, callbacks=[reduce_lr])
+        timestamp = dataframe['timestamp'].values.reshape(-1, 1)
+        subjectivity = dataframe['subjectivity'].values.reshape(-1, 1)
+        polarity = dataframe['polarity'].values.reshape(-1, 1)
+        compound = dataframe['compound'].values.reshape(-1, 1)
+        negative = dataframe['negative'].values.reshape(-1, 1)
+        neutral = dataframe['neutral'].values.reshape(-1, 1)
+        positive = dataframe['positive'].values.reshape(-1, 1)
+        open = dataframe['open'].values.reshape(-1, 1)
+
+        timestamp_ = self.scaler.fit_transform(timestamp)
+        subjectivity_ = self.scaler.fit_transform(subjectivity)
+        polarity_ = self.scaler.fit_transform(polarity)
+        compound_ = self.scaler.fit_transform(compound)
+        negative_ = self.scaler.fit_transform(negative)
+        neutral_ = self.scaler.fit_transform(neutral)
+        positive_ = self.scaler.fit_transform(positive)
+        open_ = self.scaler.fit_transform(open)
+
+        timestamp_train, timestamp_test = self.split_train_test(timestamp_, train_size, test_size)
+        subjectivity_train, subjectivity_test = self.split_train_test(subjectivity_, train_size, test_size)
+        polarity_train, polarity_test = self.split_train_test(polarity_, train_size, test_size)
+        compound_train, compound_test = self.split_train_test(compound_, train_size, test_size)
+        negative_train, negative_test = self.split_train_test(negative_, train_size, test_size)
+        neutral_train, neutral_test = self.split_train_test(neutral_, train_size, test_size)
+        positive_train, positive_test = self.split_train_test(positive_, train_size, test_size)
+        open_train, open_test = self.split_train_test(open_, train_size, test_size)
+
+        return timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test
 
 
-def main(filepath):
-    dataframe = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
+    def split_train_test(self, obj, train_size, test_size):
+        """
+        Split object into training and testing data.
+
+        :param obj: object to split
+
+        :param train_size: size of training data
+        :param test_size: size of testing data
+
+        :return obj_train, obj_test
+        """
+        obj_train = obj[0:train_size].reshape(train_size, 1, 1)
+        obj_test = obj[train_size:len(obj)].reshape(test_size, 1, 1)
+        return obj_train, obj_test
+
+
+    def buildModel(self, labelLength):
+        """
+        Build model.
+        """
+        timestamp = tf.keras.Input(shape=(1,1), name='timestamp')
+        subjectivity = tf.keras.Input(shape=(1,1), name='subjectivity')
+        polarity = tf.keras.Input(shape=(1,1), name='polarity')
+        compound = tf.keras.Input(shape=(1, 1), name='compound')
+        negative = tf.keras.Input(shape=(1, 1), name='negative')
+        neutral = tf.keras.Input(shape=(1, 1), name='neutral')
+        positive = tf.keras.Input(shape=(1, 1), name='positive')
+
+        timestampLayers = LSTM(100, return_sequences=False)(timestamp)
+        subjectivityLayers = LSTM(100, return_sequences=False)(subjectivity)
+        polarityLayers = LSTM(100, return_sequences=False)(polarity)
+        compoundLayers = LSTM(100, return_sequences=False)(compound)
+        negativeLayers = LSTM(100, return_sequences=False)(negative)
+        neutralLayers = LSTM(100, return_sequences=False)(neutral)
+        positiveLayers = LSTM(100, return_sequences=False)(positive)
+
+        output = tf.keras.layers.concatenate(inputs=[timestampLayers, subjectivityLayers, polarityLayers, compoundLayers, negativeLayers, neutralLayers, positiveLayers], axis=1)
+        output = Dense(labelLength, activation='relu', name='weightedAverage_output_3')(output)
+
+        model = Model(inputs=[timestamp, subjectivity, polarity, compound, negative, neutral, positive], outputs=[output])
+        optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
+        model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
+        return model
+
+
+def main(filepath: str, coin: str):
+    dataframe = pd.read_csv(filepath)
     columns = dataframe.columns
     drop_columns = []
     check_columns = ['close', 'high', 'low']
     for col in check_columns:
         if col in columns:
             drop_columns.append(col)
-    dataframe = dataframe.drop(drop_columns)
+    dataframe = dataframe.drop(columns=drop_columns)
     logging.info(dataframe.head())
 
-    model_class = SentimentLSTMModel(dataframe)
-    model_e1d1 = model_class.model_e1d1
-    model_e2d2 = model_class.model_e2d2
-
-    pred_e1d1 = model_e1d1.predict(model_class.X_test)
-    pred_e2d2 = model_e2d2.predict(model_class.X_test)
-
-    for index, i in enumerate(model_class.train_dataframe):
-        scaler = model_class.scalers['scaler_' + i]
-        pred_e1d1[:,:,index] = scaler.inverse_transform(pred_e1d1[:, :, index])
-        pred_e2d2[:,:,index] = scaler.inverse_transform(pred_e2d2[:,:,index])
-        model_class.y_train[:,:,index] = scaler.inverse_transform(model_class.y_train[:,:,index])
-        model_class.y_test[:,:,index] = scaler.inverse_transform(model_class.y_test[:,:,index])
-
-    for index, i in enumerate(model_class.train_dataframe.columns):
-        logging.info(i)
-        for j in range(1,6):
-            logging.info(f'Day {j}:')
-            logging.info(f'MAE-E1D1 : {mean_absolute_error(model_class.y_test[:,j-1,index],pred_e1d1[:,j-1,index])},')
-            logging.info(f'MAE-E2D2 : {mean_absolute_error(model_class.y_test[:,j-1,index],pred_e2d2[:,j-1,index])}')
-        logging.info("")
-        logging.info("")
+    SentimentLSTMModel(dataframe, coin)
 
 
+if __name__ == "__main__":
+    """
+    coins = ['bitcoin', 'ethereum', 'solana']
 
-
+    for coin in coins:
+        filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
+        main(coin, filepath)
+    """
+    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    main(filepath, 'bitcoin')
