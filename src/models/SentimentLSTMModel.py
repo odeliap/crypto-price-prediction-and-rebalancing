@@ -2,7 +2,7 @@
 LSTM neural network with date and sentiment inputs.
 
 Made by following tutorial:
-https://www.kaggle.com/code/sushantjha8/multiple-input-and-single-output-in-keras
+https://stackoverflow.com/questions/59457567/how-can-i-create-multiple-input-one-output-lstm-model-with-keras
 """
 
 # ------------- Libraries -------------
