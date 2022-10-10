@@ -11,21 +11,21 @@ https://towardsdatascience.com/cryptocurrency-price-prediction-using-lstms-tenso
 import logging
 
 from tensorflow import keras
-from keras.layers import Bidirectional, CuDNNLSTM, Dropout, Dense, Activation
+from keras.layers import Bidirectional, LSTM, Dropout, Dense, Activation
 
 import pandas as pd
 import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler
 
-from Utils import data_split, convergePrices, saveModel, loadModel, comparisonGraph
+from Utils import convergePrices, saveModel, loadModel, comparisonGraph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-SEQ_LEN = 100
+SEQ_LEN = 10 # consider changing to 100
 DROPOUT = 0.2
 WINDOW_SIZE = SEQ_LEN - 1
 BATCH_SIZE = 64
@@ -46,24 +46,25 @@ class PriceLSTMModel:
         :type: str
         """
         self.scaler = MinMaxScaler()
-        scaled_close = convergePrices(dataframe, priceLabel)
+        scaled_price = convergePrices(dataframe, priceLabel, self.scaler)
 
-        self.x_train, self.y_train, self.x_test, self.y_test = self.preprocess(scaled_close, SEQ_LEN, 0.95)
+        self.X_train, self.y_train, self.X_test, self.y_test = self.preprocess(scaled_price, SEQ_LEN, 0.95)
 
         self.model = keras.Sequential()
 
         self.model.add(Bidirectional(
-            CuDNNLSTM(WINDOW_SIZE, return_sequences=True),
-            input_shape=(WINDOW_SIZE, self.x_train.shape[-1])
+            LSTM(WINDOW_SIZE, return_sequences=True),
+            input_shape=(WINDOW_SIZE, self.X_train.shape[-1])
         ))
         self.model.add(Dropout(rate=DROPOUT))
 
         self.model.add(Bidirectional(
-            CuDNNLSTM(WINDOW_SIZE, return_sequences=False)
+            LSTM(WINDOW_SIZE, return_sequences=False)
         ))
 
         self.model.add(Dense(units=1))
         self.model.add(Activation('linear'))
+        self.train()
         saveModel(self.model, modelSavedPath)
 
 
@@ -101,12 +102,15 @@ class PriceLSTMModel:
         """
         data = self.to_sequences(raw_data, seq_len)
 
-        X = data[:, :-1, :]
-        Y = data[:, -1, :]
+        num_train = int(train_split * data.shape[0])
 
-        x_train, x_test, y_train, y_test = data_split(X, Y, train_split)
+        X_train = data[:num_train, :-1, :]
+        y_train = data[:num_train, -1, :]
 
-        return x_train, y_train, x_test, y_test
+        X_test = data[num_train:, :-1, :]
+        y_test = data[num_train:, -1, :]
+
+        return X_train, y_train, X_test, y_test
 
 
     def train(self):
@@ -119,7 +123,7 @@ class PriceLSTMModel:
         )
 
         self.history = self.model.fit(
-            self.x_train,
+            self.X_train,
             self.y_train,
             epochs=50,
             batch_size=BATCH_SIZE,
@@ -151,7 +155,7 @@ def predict(input_data):
     """
     loaded_model = loadModel(modelSavedPath)
     scaled_predictions = loaded_model.predict(input_data)
-    predictions = MinMaxScaler().inverse_transform(scaled_predictions)
+    predictions = loaded_model.scaler.inverse_transform(scaled_predictions)
     return predictions
 
 
@@ -169,10 +173,11 @@ def main(coin: str, filepath: str):
     """
     logging.info(f"starting up {coin} price lstm model")
 
-    dataframe = pd.read_csv(filepath)
+    dataframe = pd.read_csv(filepath, parse_dates=['timestamp'])
+    dataframe = dataframe.sort_values('timestamp')
 
     model = PriceLSTMModel(dataframe, 'open')
-    predictions = model.predict(model.x_test)
+    predictions = model.predict(model.X_test)
     comparisonGraph(model.y_test, predictions, coin)
 
 

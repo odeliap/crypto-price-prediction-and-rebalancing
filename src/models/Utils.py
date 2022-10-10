@@ -32,7 +32,7 @@ def data_split(input_data, output_data, split = 0.2):
     return x_train, x_test, y_train, y_test
 
 
-def convergePrices(dataframe: pd.DataFrame, priceLabel: str) -> np.ndarray:
+def convergePrices(dataframe: pd.DataFrame, priceLabel: str, scaler = MinMaxScaler()) -> np.ndarray:
     """
     Converge prices to values between 0 and 1.
 
@@ -42,10 +42,11 @@ def convergePrices(dataframe: pd.DataFrame, priceLabel: str) -> np.ndarray:
     :param priceLabel: column header for price column
     :type: str
 
+    :scaler scaler: scaler to scale with
+
     :return: scaled_close: cleaned price label column (reshaped to have shape (x, y))
     :rtype: np.ndarray
     """
-    scaler = MinMaxScaler()
     close_price = dataframe[priceLabel].values.reshape(-1, 1) # scaler expects data is shaped as (x, y) so we add dummy dimension
 
     scaled_close = scaler.fit_transform(close_price)

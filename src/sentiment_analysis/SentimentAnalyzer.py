@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 # ------------- Constants -------------
 
 KEEP_COLUMNS = ['open', 'high', 'low', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral',
-                'positive']
+                'positive', 'timestamp']
 
 # ------------- Class -------------
 
