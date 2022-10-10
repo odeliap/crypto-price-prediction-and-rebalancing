@@ -19,12 +19,16 @@ from keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 
+from Utils import saveModel
+
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
 train_split = 0.75
+
+modelSavedPath = './outputs/SentimentLSTMModel.sav'
 
 # ------------- Class -------------
 
@@ -64,16 +68,17 @@ class SentimentLSTMModel:
         logdir="logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
-        rnn = self.buildModel(1)
-        rnn.fit([timestamp_train, subjectivity_train, polarity_train, compound_train, negative_train, neutral_train, positive_train],
+        self.rnn = self.buildModel(1)
+        self.rnn.fit([timestamp_train, subjectivity_train, polarity_train, compound_train, negative_train, neutral_train, positive_train],
                 [open_train],
                 validation_data = ([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test], [open_test]),
                 epochs = 1,
                 batch_size = 10,
                 callbacks = [tensorboard_callback]
                 )
+        saveModel(self.rnn, modelSavedPath)
 
-        result = rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
+        result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
         self.scaler.inverse_transform(result)
 
 
@@ -162,6 +167,17 @@ class SentimentLSTMModel:
         optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
         model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
         return model
+
+
+    def predict(self, input):
+        """
+        Make predictions.
+
+        :param input: input or x data
+
+        :return predictions: output predictions
+        """
+        return self.rnn.predict(input)
 
 
 def main(filepath: str, coin: str):
