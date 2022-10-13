@@ -16,19 +16,21 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Model
 from keras.optimizers import Adam
+# for bletchley change to:
+# from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 
-from Utils import saveModel
+from Utils import saveModel, comparisonGraph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-train_split = 0.75
+train_split = 0.90
 
-modelSavedPath = './outputs/SentimentLSTMModel.sav'
+modelSavedPath = './outputs/SentimentLSTMModel'
 
 # ------------- Class -------------
 
@@ -60,7 +62,7 @@ class SentimentLSTMModel:
         date = new_data.timestamp.values
         dates = []
         for i in date:
-            dates.append(i.split('/')[0])
+            dates.append(i.split('-')[0])
         new_data['timestamp'] = dates
 
         timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test = self.preprocess(new_data, train_size, test_size)
@@ -76,10 +78,52 @@ class SentimentLSTMModel:
                 batch_size = 10,
                 callbacks = [tensorboard_callback]
                 )
-        saveModel(self.rnn, modelSavedPath)
+        saveModel(self.rnn, f'{modelSavedPath}_{coin}.sav')
 
-        result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
-        self.scaler.inverse_transform(result)
+        scaled_result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
+        result = self.scaler.inverse_transform(scaled_result)
+
+        self.report_and_graph_test_results(coin, result, open_test)
+
+
+    def report_and_graph_test_results(self, coin, result, test_output):
+        """
+        Report and graph test results.
+
+        :param coin: coin of interest
+        :type: str
+
+        :param result: 2d predicted outputs array
+        :type: 2d array-like
+
+        :param test_output: 2d test outputs (actual prices set aside for testing)
+        :type: 2d array-like
+        """
+        predictions = []
+        test_actual_prices_2d = []
+        test_actual_prices_1d = []
+
+        for arr in result:
+            for val in arr:
+                predictions.append(val)
+
+        for arr in test_output:
+            for sub_arr in arr:
+                test_actual_prices_2d.append(sub_arr)
+
+        test_actual_prices_2d = self.scaler.inverse_transform(test_actual_prices_2d)
+
+        for arr in test_actual_prices_2d:
+            for val in arr:
+                test_actual_prices_1d.append(val)
+
+        logging.info("PREDICTIONS:")
+        logging.info(f'{predictions}\n')
+        logging.info("ACTUAL PRICES:")
+        logging.info(f'{test_actual_prices_1d}\n')
+
+        comparisonGraph(test_actual_prices_1d, predictions, coin,
+                        f'outputs/graphs/SentimentLSTMModel_comparison_{coin}.png')
 
 
     def preprocess(self, dataframe, train_size, test_size):
@@ -164,7 +208,7 @@ class SentimentLSTMModel:
         output = Dense(labelLength, activation='relu', name='weightedAverage_output_3')(output)
 
         model = Model(inputs=[timestamp, subjectivity, polarity, compound, negative, neutral, positive], outputs=[output])
-        optimizer = Adam(lr=0.001, beta_1=0.9, beta_2=0.999)
+        optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
         model.compile(optimizer=optimizer, loss='mse', metrics=['mae'])
         return model
 
@@ -202,5 +246,5 @@ if __name__ == "__main__":
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
     """
-    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    filepath = f'../sentiment_analysis/outputs/bitcoin_sentiment_dataset.csv'
     main(filepath, 'bitcoin')

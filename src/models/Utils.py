@@ -79,7 +79,7 @@ def loadModel(fullyQualifiedFilepath):
     return pickle.load(open(fullyQualifiedFilepath), 'rb')
 
 
-def comparisonGraph(y_true, y_pred, coin):
+def comparisonGraph(y_true, y_pred, coin, output_path):
     """
     Create a graph comparing actual and predicted values.
 
@@ -91,12 +91,16 @@ def comparisonGraph(y_true, y_pred, coin):
 
     :param coin: name of related coin
     :type: str
+
+    :param output_path: output path to save graph to
+    :type: str
     """
     days_passed = len(y_pred)
     time = np.arange(days_passed)
     plt.plot(time, y_true, 'red', label='Actual Price')
     plt.plot(time, y_pred, 'blue', label='Predicted Price')
+    plt.legend()
     plt.xlabel('Time[days]')
     plt.ylabel('Price')
     plt.title(f'{coin.capitalize()} price prediction')
-    plt.show()
+    plt.savefig(output_path)

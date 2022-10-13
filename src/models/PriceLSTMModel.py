@@ -29,15 +29,19 @@ SEQ_LEN = 10 # consider changing to 100
 DROPOUT = 0.2
 WINDOW_SIZE = SEQ_LEN - 1
 BATCH_SIZE = 64
+TRAIN_SPLIT = 0.90
 
-modelSavedPath = './outputs/PriceLSTMModel.sav'
+modelSavedPath = './outputs/PriceLSTMModel'
 
 # ------------- Class -------------
 class PriceLSTMModel:
 
-    def __init__(self, dataframe: pd.DataFrame, priceLabel: str):
+    def __init__(self, coin: str, dataframe: pd.DataFrame, priceLabel: str):
         """
         Initialize PriceLSTMModel
+
+        :param coin: coin of interest
+        :type: str
 
         :param dataframe: pandas dataframe to process
         :type: pd.DataFrame
@@ -48,7 +52,9 @@ class PriceLSTMModel:
         self.scaler = MinMaxScaler()
         scaled_price = convergePrices(dataframe, priceLabel, self.scaler)
 
-        self.X_train, self.y_train, self.X_test, self.y_test = self.preprocess(scaled_price, SEQ_LEN, 0.95)
+        self.X_train, self.y_train, self.X_test, self.y_test = self.preprocess(scaled_price, SEQ_LEN, TRAIN_SPLIT)
+
+        self.test_actual_prices = self.scaler.inverse_transform(self.y_test)
 
         self.model = keras.Sequential()
 
@@ -65,7 +71,7 @@ class PriceLSTMModel:
         self.model.add(Dense(units=1))
         self.model.add(Activation('linear'))
         self.train()
-        saveModel(self.model, modelSavedPath)
+        saveModel(self.model, f'{modelSavedPath}_{coin}.sav')
 
 
     @staticmethod
@@ -155,6 +161,7 @@ def predict(input_data):
     """
     loaded_model = loadModel(modelSavedPath)
     scaled_predictions = loaded_model.predict(input_data)
+    # TODO: FIXME (expecting error with scaler)
     predictions = loaded_model.scaler.inverse_transform(scaled_predictions)
     return predictions
 
@@ -176,9 +183,15 @@ def main(coin: str, filepath: str):
     dataframe = pd.read_csv(filepath, parse_dates=['timestamp'])
     dataframe = dataframe.sort_values('timestamp')
 
-    model = PriceLSTMModel(dataframe, 'open')
+    model = PriceLSTMModel(coin, dataframe, 'open')
     predictions = model.predict(model.X_test)
-    comparisonGraph(model.y_test, predictions, coin)
+
+    logging.info("PREDICTIONS:")
+    logging.info(f'{predictions}\n')
+    logging.info("ACTUAL PRICES:")
+    logging.info(f'{model.test_actual_prices}\n')
+
+    comparisonGraph(model.test_actual_prices, predictions, coin, f'outputs/graphs/PriceLSTMModel_comparison_{coin}.png')
 
 
 if __name__ == "__main__":
@@ -189,5 +202,5 @@ if __name__ == "__main__":
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
     """
-    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    filepath = f'../sentiment_analysis/outputs/bitcoin_sentiment_dataset.csv'
     main('bitcoin', filepath)

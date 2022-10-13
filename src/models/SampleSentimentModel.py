@@ -20,15 +20,20 @@ logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-modelSavedPath = './outputs/SampleSentimentModel.sav'
+modelSavedPath = './outputs/SampleSentimentModel'
+
+train_split = 0.1
 
 # ----------- Class -----------
 
 class SampleSentimentModel:
 
-    def __init__(self, dataframe: pd.DataFrame, priceLabel: str):
+    def __init__(self, coin: str, dataframe: pd.DataFrame, priceLabel: str):
         """
         Initialize SampleSentimentModel
+
+        :param coin: coin of interest
+        :type: str
 
         :param dataframe: pandas dataframe to process
         :type: pd.DataFrame
@@ -36,7 +41,7 @@ class SampleSentimentModel:
         :param priceLabel: column header for price column
         :type: str
         """
-        drop_columns = ['open', 'high', 'low']
+        drop_columns = ['open', 'high', 'low', 'timestamp']
         features = dataframe
         features = np.array(features.drop(drop_columns, axis=1))
         price_data = np.array(dataframe[priceLabel])
@@ -51,10 +56,10 @@ class SampleSentimentModel:
                 label_price_data.append(0)
             previous_price = price
 
-        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, label_price_data)
+        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, label_price_data, train_split)
 
         self.model = LinearDiscriminantAnalysis().fit(self.x_train, self.y_train)
-        saveModel(self.model, modelSavedPath)
+        saveModel(self.model, f'{modelSavedPath}_{coin}.sav')
 
 
     def predict(self, input_data):
@@ -69,7 +74,7 @@ class SampleSentimentModel:
         return predictions
 
 
-def predict(input_data):
+def predict(coin, input_data):
     """
     Predict price for input data based on saved model.
 
@@ -77,7 +82,7 @@ def predict(input_data):
 
     :return predictions: predicted prices
     """
-    loaded_model = loadModel(modelSavedPath)
+    loaded_model = loadModel(f'{modelSavedPath}_{coin}.sav')
     predictions = loaded_model.predict(input_data)
     return predictions
 
@@ -98,10 +103,16 @@ def main(coin: str, filepath: str):
 
     dataframe = pd.read_csv(filepath)
 
-    model = SampleSentimentModel(dataframe, 'open')
+    model = SampleSentimentModel(coin, dataframe, 'open')
     predictions = model.predict(model.x_test)
     logging.info(classification_report(model.y_test, predictions))
-    comparisonGraph(model.y_test, predictions, coin)
+
+    logging.info("PREDICTIONS:")
+    logging.info(f'{predictions}\n')
+    logging.info("ACTUAL PRICES:")
+    logging.info(f'{model.y_test}\n')
+
+    comparisonGraph(model.y_test, predictions, coin, f'outputs/graphs/SampleSentimentModel_comparison_{coin}.png')
 
 
 if __name__ == "__main__":
@@ -112,5 +123,5 @@ if __name__ == "__main__":
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
     """
-    filepath = f'../sentiment_analysis/outputs/sample_sentiment_dataset.csv'
+    filepath = f'../sentiment_analysis/outputs/bitcoin_sentiment_dataset.csv'
     main('bitcoin', filepath)
