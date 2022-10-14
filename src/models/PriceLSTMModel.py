@@ -161,7 +161,7 @@ def predict(input_data):
     """
     loaded_model = loadModel(modelSavedPath)
     scaled_predictions = loaded_model.predict(input_data)
-    # TODO: FIXME (expecting error with scaler)
+    # TODO: FIXME (expecting error with scaler) - save scaler and call separately
     predictions = loaded_model.scaler.inverse_transform(scaled_predictions)
     return predictions
 

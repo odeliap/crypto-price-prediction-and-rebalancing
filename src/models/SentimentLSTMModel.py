@@ -205,7 +205,7 @@ class SentimentLSTMModel:
         positiveLayers = LSTM(100, return_sequences=False)(positive)
 
         output = tf.keras.layers.concatenate(inputs=[timestampLayers, subjectivityLayers, polarityLayers, compoundLayers, negativeLayers, neutralLayers, positiveLayers], axis=1)
-        output = Dense(labelLength, activation='relu', name='weightedAverage_output_3')(output)
+        output = Dense(labelLength, activation='relu', name='weightedAverage_output_7')(output)
 
         model = Model(inputs=[timestamp, subjectivity, polarity, compound, negative, neutral, positive], outputs=[output])
         optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
