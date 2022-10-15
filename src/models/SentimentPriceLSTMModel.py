@@ -109,13 +109,11 @@ def main():
     df = df.drop(df.columns[[0]], axis=1)
     print(df.head())
 
-    """
     plt.plot(df.open)
     plt.xlabel("Time")
     plt.ylabel("Price (USD)")
     plt.title("Bitcoin price over time")
     plt.show()
-    """
 
     X, y = df.drop(columns=['open']), df.open.values
     print(X.shape, y.shape)
@@ -179,7 +177,7 @@ def main():
                   y_test=y_test_tensors)
 
     df_X_ss = ss.transform(df.drop(columns=['open']))  # old transformers
-    df_y_mm = mm.transform(df.Close.values.reshape(-1, 1))  # old transformers
+    df_y_mm = mm.transform(df.open.values.reshape(-1, 1))  # old transformers
     # split the sequence
     df_X_ss, df_y_mm = split_sequences(df_X_ss, df_y_mm, 100, 50)
     # converting to tensors
@@ -206,7 +204,7 @@ def main():
     plt.plot(preds, label='Predicted Data')  # predicted plot
     plt.title('Time-Series Prediction')
     plt.legend()
-    plt.savefig("whole_plot.png", dpi=300)
+    plt.savefig("outputs/whole_plot.png", dpi=300)
     plt.show()
 
     test_predict = lstm(X_test_tensors_final[-1].unsqueeze(0))  # get the last sample
@@ -220,7 +218,7 @@ def main():
 
     plt.plot(test_target, label="Actual Data")
     plt.plot(test_predict, label="LSTM Predictions")
-    plt.savefig("small_plot.png", dpi=300)
+    plt.savefig("outputs/small_plot.png", dpi=300)
     plt.show()
 
     plt.figure(figsize=(10, 6))  # plotting
