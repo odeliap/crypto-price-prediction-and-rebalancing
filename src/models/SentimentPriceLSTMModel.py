@@ -11,7 +11,6 @@ import logging
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 import warnings
 
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
@@ -40,6 +39,8 @@ num_layers = 1 # number of stacked lstm layers
 
 num_classes = 50 # number of output classes
 
+# ------------- Class -------------
+
 class SentimentPriceLSTM(nn.Module):
 
     def __init__(self, num_classes, input_size, hidden_size, num_layers):
@@ -56,6 +57,9 @@ class SentimentPriceLSTM(nn.Module):
         self.relu = nn.ReLU()
 
     def forward(self, x):
+        """
+        Lstm forward pass.
+        """
         # hidden state
         h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size))
         # cell state
@@ -70,8 +74,10 @@ class SentimentPriceLSTM(nn.Module):
         return out
 
 
-# split a multivariate sequence past, future samples (X and y)
 def split_sequences(input_sequences, output_sequence, n_steps_in, n_steps_out):
+    """
+    Split multivariate sequence into past and future samples (X and y).
+    """
     X, y = list(), list() # instantiate X and y
     for i in range(len(input_sequences)):
         # find the end of the input, output sequence
@@ -86,6 +92,9 @@ def split_sequences(input_sequences, output_sequence, n_steps_in, n_steps_out):
 
 def training_loop(n_epochs, lstm, optimiser, loss_fn, X_train, y_train,
                   X_test, y_test):
+    """
+    Train model.
+    """
     for epoch in range(n_epochs):
         lstm.train()
         outputs = lstm.forward(X_train) # forward pass
@@ -103,9 +112,8 @@ def training_loop(n_epochs, lstm, optimiser, loss_fn, X_train, y_train,
                                                                       loss.item(),
                                                                       test_loss.item()))
 
-
-def main():
-    df = pd.read_csv(r'../sentiment_analysis/outputs/bitcoin_sentiment_dataset.csv', header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
+def main(filepath: str):
+    df = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
     df = df.drop(df.columns[[0]], axis=1)
     print(df.head())
 
@@ -232,4 +240,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    coins = ['bitcoin', 'ethereum', 'solana']
+
+    for coin in coins:
+        filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
+        main(filepath)
