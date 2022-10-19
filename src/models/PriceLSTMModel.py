@@ -18,7 +18,7 @@ import numpy as np
 
 from sklearn.preprocessing import MinMaxScaler
 
-from Utils import convergePrices, saveModel, loadModel, comparisonGraph
+from Utils import convergePrices, saveModel, saveScaler, loadModel, loadScaler, comparisonGraph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -32,6 +32,7 @@ BATCH_SIZE = 64
 TRAIN_SPLIT = 0.90
 
 modelSavedPath = './outputs/PriceLSTMModel'
+scalerSavedPath = './outputs/PriceLSTMScaler'
 
 # ------------- Class -------------
 class PriceLSTMModel:
@@ -71,6 +72,7 @@ class PriceLSTMModel:
         self.model.add(Dense(units=1))
         self.model.add(Activation('linear'))
         self.train()
+        saveScaler(self.scaler, f'{scalerSavedPath}_{coin}.pkl')
         saveModel(self.model, f'{modelSavedPath}_{coin}.sav')
 
 
@@ -151,18 +153,20 @@ class PriceLSTMModel:
         return predictions
 
 
-def predict(input_data):
+def predict(input, coin):
     """
-    Predict price for input data based on saved model.
+    Make predictions.
 
-    :param input_data: input or x data
+    :param input: input or x data
 
-    :return predictions: predicted prices
+    :param coin: coin of interest
+
+    :return predictions: output predictions
     """
-    loaded_model = loadModel(modelSavedPath)
-    scaled_predictions = loaded_model.predict(input_data)
-    # TODO: FIXME (expecting error with scaler) - save scaler and call separately
-    predictions = loaded_model.scaler.inverse_transform(scaled_predictions)
+    model = loadModel(f'{modelSavedPath}_{coin}.sav')
+    scaled_predictions = model.predict(input)
+    scaler = loadScaler(f'{scalerSavedPath}_{coin}.pkl')
+    predictions = scaler.inverse_transform(scaled_predictions)
     return predictions
 
 

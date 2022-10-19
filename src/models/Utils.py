@@ -69,11 +69,33 @@ def saveModel(model, fullyQualifiedFilepath):
     pickle.dump(model, open(fullyQualifiedFilepath, 'wb'))
 
 
+def saveScaler(scaler, fullyQualifiedFilepath):
+    """
+    Save scaler to file.
+
+    :param scaler: scaler to save
+
+    :param fullyQualifiedFilepath: file path to save model to
+    :type: str
+    """
+    pickle.dump(scaler, open(fullyQualifiedFilepath, 'wb'))
+
+
 def loadModel(fullyQualifiedFilepath):
     """
     Load model from path.
 
     :param fullyQualifiedFilepath: file path to saved model
+    :type: str
+    """
+    return pickle.load(open(fullyQualifiedFilepath), 'rb')
+
+
+def loadScaler(fullyQualifiedFilepath):
+    """
+    Load scaler from path.
+
+    :param fullyQualifiedFilepath: file path to saved scaler
     :type: str
     """
     return pickle.load(open(fullyQualifiedFilepath), 'rb')

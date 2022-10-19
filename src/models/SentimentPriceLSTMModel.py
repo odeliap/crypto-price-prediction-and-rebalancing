@@ -18,6 +18,8 @@ import torch
 from torch.autograd import Variable
 from torch import nn
 
+from Utils import saveModel, saveScaler, loadModel, loadScaler
+
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
@@ -38,6 +40,10 @@ hidden_size = 2 # number of features in hidden state
 num_layers = 1 # number of stacked lstm layers
 
 num_classes = 50 # number of output classes
+
+modelSavedPath = './outputs/SentimentPriceLSTMModel'
+ssScalerSavedPath = './outputs/SentimentPriceLSTMSsScaler'
+mmScalerSavedPath = './outputs/SentimentPriceLSTMMmScaler'
 
 # ------------- Class -------------
 
@@ -112,6 +118,31 @@ def training_loop(n_epochs, lstm, optimiser, loss_fn, X_train, y_train,
                                                                       loss.item(),
                                                                       test_loss.item()))
 
+def predict(input, coin):
+    """
+    Make predictions.
+
+    :param input: input or x data
+
+    :param coin: coin of interest
+
+    :return predictions: output predictions
+    """
+    lstm = loadModel(f'{modelSavedPath}_{coin}.sav')
+    ss = loadScaler(f'{ssScalerSavedPath}_{coin}.pkl')
+    mm = loadScaler(f'{mmScalerSavedPath}_{coin}.pkl')
+
+    X_trans = ss.fit_transform(input)
+
+    X_tensors = Variable(torch.Tensor(X_trans))
+
+    X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], 100, X_tensors.shape[2]))
+
+    train_predict = lstm(X_train_tensors_final)  # forward pass
+    predictions = train_predict.data.numpy()  # numpy conversion
+    predictions = mm.inverse_transform(predictions)  # reverse transformation
+    return predictions
+
 def main(filepath: str):
     df = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
     df = df.drop(df.columns[[0]], axis=1)
@@ -184,6 +215,8 @@ def main(filepath: str):
                   X_test=X_test_tensors_final,
                   y_test=y_test_tensors)
 
+    saveModel(lstm, f'{modelSavedPath}_{coin}.sav')
+
     df_X_ss = ss.transform(df.drop(columns=['open']))  # old transformers
     df_y_mm = mm.transform(df.open.values.reshape(-1, 1))  # old transformers
     # split the sequence
@@ -237,6 +270,9 @@ def main(filepath: str):
     plt.axvline(x=len(y) - 50, c='r', linestyle='--')
     plt.legend()
     plt.show()
+
+    saveScaler(mm, f'{ssScalerSavedPath}_{coin}.pkl')
+    saveScaler(ss, f'{mmScalerSavedPath}_{coin}.pkl')
 
 
 if __name__ == "__main__":

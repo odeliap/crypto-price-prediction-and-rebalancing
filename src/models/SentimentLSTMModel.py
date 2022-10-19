@@ -16,12 +16,10 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Model
 from keras.optimizers import Adam
-# for bletchley change to:
-# from tensorflow.keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 
-from Utils import saveModel, comparisonGraph
+from Utils import saveModel, saveScaler, comparisonGraph, loadModel, loadScaler
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -31,6 +29,7 @@ logging.basicConfig(level=logging.INFO)
 train_split = 0.90
 
 modelSavedPath = './outputs/SentimentLSTMModel'
+scalerSavedPath = './outputs/SentimentLSTMScaler'
 
 # ------------- Class -------------
 
@@ -78,12 +77,14 @@ class SentimentLSTMModel:
                 batch_size = 10,
                 callbacks = [tensorboard_callback]
                 )
-        saveModel(self.rnn, f'{modelSavedPath}_{coin}.sav')
 
         scaled_result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
         result = self.scaler.inverse_transform(scaled_result)
 
         self.report_and_graph_test_results(coin, result, open_test)
+
+        saveModel(self.rnn, f'{modelSavedPath}_{coin}.sav')
+        saveScaler(self.scaler, f'{scalerSavedPath}_{coin}.pkl')
 
 
     def report_and_graph_test_results(self, coin, result, test_output):
@@ -219,10 +220,28 @@ class SentimentLSTMModel:
 
         :param input: input or x data
 
-        :return predictions: output predictions
+        :return result: output predictions
         """
-        return self.rnn.predict(input)
+        scaled_result = self.rnn.predict(input)
+        result = self.scaler.inverse_transform(scaled_result)
+        return result
 
+
+def predict(input, coin):
+    """
+    Make predictions.
+
+    :param input: input or x data
+
+    :param coin: coin of interest
+
+    :return predictions: output predictions
+    """
+    model = loadModel(f'{modelSavedPath}_{coin}.sav')
+    scaled_predictions = model.predict(input)
+    scaler = loadScaler(f'{scalerSavedPath}_{coin}.pkl')
+    predictions = scaler.inverse_transform(scaled_predictions)
+    return predictions
 
 def main(filepath: str, coin: str):
     dataframe = pd.read_csv(filepath)
