@@ -31,8 +31,8 @@ WINDOW_SIZE = SEQ_LEN - 1
 BATCH_SIZE = 64
 TRAIN_SPLIT = 0.90
 
-modelSavedPath = './outputs/PriceLSTMModel'
-scalerSavedPath = './outputs/PriceLSTMScaler'
+modelSavedPath = './outputs/models/PriceLSTMModel'
+scalerSavedPath = './outputs/scalers/PriceLSTMScaler'
 
 # ------------- Class -------------
 class PriceLSTMModel:

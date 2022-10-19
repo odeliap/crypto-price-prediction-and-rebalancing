@@ -41,9 +41,9 @@ num_layers = 1 # number of stacked lstm layers
 
 num_classes = 50 # number of output classes
 
-modelSavedPath = './outputs/SentimentPriceLSTMModel'
-ssScalerSavedPath = './outputs/SentimentPriceLSTMSsScaler'
-mmScalerSavedPath = './outputs/SentimentPriceLSTMMmScaler'
+modelSavedPath = './outputs/models/SentimentPriceLSTMModel'
+ssScalerSavedPath = './outputs/scalers/SentimentPriceLSTMSsScaler'
+mmScalerSavedPath = './outputs/scalers/SentimentPriceLSTMMmScaler'
 
 # ------------- Class -------------
 
@@ -143,7 +143,7 @@ def predict(input, coin):
     predictions = mm.inverse_transform(predictions)  # reverse transformation
     return predictions
 
-def main(filepath: str):
+def main(coin: str, filepath: str):
     df = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
     df = df.drop(df.columns[[0]], axis=1)
     print(df.head())
@@ -245,7 +245,7 @@ def main(filepath: str):
     plt.plot(preds, label='Predicted Data')  # predicted plot
     plt.title('Time-Series Prediction')
     plt.legend()
-    plt.savefig("outputs/whole_plot.png", dpi=300)
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_whole_plot_{coin}.png", dpi=300)
     plt.show()
 
     test_predict = lstm(X_test_tensors_final[-1].unsqueeze(0))  # get the last sample
@@ -259,7 +259,7 @@ def main(filepath: str):
 
     plt.plot(test_target, label="Actual Data")
     plt.plot(test_predict, label="LSTM Predictions")
-    plt.savefig("outputs/small_plot.png", dpi=300)
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_small_plot_{coin}.png", dpi=300)
     plt.show()
 
     plt.figure(figsize=(10, 6))  # plotting
@@ -280,4 +280,4 @@ if __name__ == "__main__":
 
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
-        main(filepath)
+        main(coin, filepath)

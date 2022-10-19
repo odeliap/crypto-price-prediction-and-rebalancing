@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-modelSavedPath = './outputs/SampleSentimentModel'
+modelSavedPath = './outputs/models/SampleSentimentModel'
 
 train_split = 0.1
 

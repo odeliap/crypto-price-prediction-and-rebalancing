@@ -28,8 +28,8 @@ logging.basicConfig(level=logging.INFO)
 
 train_split = 0.90
 
-modelSavedPath = './outputs/SentimentLSTMModel'
-scalerSavedPath = './outputs/SentimentLSTMScaler'
+modelSavedPath = './outputs/models/SentimentLSTMModel'
+scalerSavedPath = './outputs/scalers/SentimentLSTMScaler'
 
 # ------------- Class -------------
 
@@ -243,7 +243,7 @@ def predict(input, coin):
     predictions = scaler.inverse_transform(scaled_predictions)
     return predictions
 
-def main(filepath: str, coin: str):
+def main(coin: str, filepath: str):
     dataframe = pd.read_csv(filepath)
     columns = dataframe.columns
     drop_columns = []
@@ -263,3 +263,4 @@ if __name__ == "__main__":
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
+
