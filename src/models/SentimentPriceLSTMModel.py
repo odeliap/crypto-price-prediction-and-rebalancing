@@ -39,7 +39,7 @@ input_size = 8 # number of features
 hidden_size = 2 # number of features in hidden state
 num_layers = 1 # number of stacked lstm layers
 
-num_classes = 50 # number of output classes
+num_classes = n_steps_out # number of output classes
 
 modelSavedPath = './outputs/models/SentimentPriceLSTMModel'
 ssScalerSavedPath = './outputs/scalers/SentimentPriceLSTMSsScaler'
@@ -136,7 +136,7 @@ def predict(input, coin):
 
     X_tensors = Variable(torch.Tensor(X_trans))
 
-    X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], 100, X_tensors.shape[2]))
+    X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], n_steps_in, X_tensors.shape[2]))
 
     train_predict = lstm(X_train_tensors_final)  # forward pass
     predictions = train_predict.data.numpy()  # numpy conversion
@@ -186,17 +186,17 @@ def main(coin: str, filepath: str):
     y_test_tensors = Variable(torch.Tensor(y_test))
 
     # reshaping to rows, timestamps, features
-    X_train_tensors_final = torch.reshape(X_train_tensors, (X_train_tensors.shape[0], 100, X_train_tensors.shape[2]))
-    X_test_tensors_final = torch.reshape(X_test_tensors, (X_test_tensors.shape[0], 100, X_test_tensors.shape[2]))
+    X_train_tensors_final = torch.reshape(X_train_tensors, (X_train_tensors.shape[0], n_steps_in, X_train_tensors.shape[2]))
+    X_test_tensors_final = torch.reshape(X_test_tensors, (X_test_tensors.shape[0], n_steps_in, X_test_tensors.shape[2]))
 
     print("Training Shape:", X_train_tensors_final.shape, y_train_tensors.shape)
     print("Testing Shape:", X_test_tensors_final.shape, y_test_tensors.shape)
 
-    X_check, y_check = split_sequences(X, y.reshape(-1, 1), 100, 50)
+    X_check, y_check = split_sequences(X, y.reshape(-1, 1), n_steps_in, n_steps_out)
     print(X_check[-1][0:4])
     print(X.iloc[-149-145])
     print(y_check[-1])
-    print(df.open.values[-50:])
+    print(df.open.values[-n_steps_out:])
 
     lstm = SentimentPriceLSTM(num_classes,
                 input_size,
@@ -220,12 +220,12 @@ def main(coin: str, filepath: str):
     df_X_ss = ss.transform(df.drop(columns=['open']))  # old transformers
     df_y_mm = mm.transform(df.open.values.reshape(-1, 1))  # old transformers
     # split the sequence
-    df_X_ss, df_y_mm = split_sequences(df_X_ss, df_y_mm, 100, 50)
+    df_X_ss, df_y_mm = split_sequences(df_X_ss, df_y_mm, n_steps_in, n_steps_out)
     # converting to tensors
     df_X_ss = Variable(torch.Tensor(df_X_ss))
     df_y_mm = Variable(torch.Tensor(df_y_mm))
     # reshaping the dataset
-    df_X_ss = torch.reshape(df_X_ss, (df_X_ss.shape[0], 100, df_X_ss.shape[2]))
+    df_X_ss = torch.reshape(df_X_ss, (df_X_ss.shape[0], n_steps_in, df_X_ss.shape[2]))
 
     train_predict = lstm(df_X_ss)  # forward pass
     data_predict = train_predict.data.numpy()  # numpy conversion
@@ -265,9 +265,9 @@ def main(coin: str, filepath: str):
     plt.figure(figsize=(10, 6))  # plotting
     a = [x for x in range(2500, len(y))]
     plt.plot(a, y[2500:], label='Actual data')
-    c = [x for x in range(len(y) - 50, len(y))]
-    plt.plot(c, test_predict, label='One-shot multi-step prediction (50 days)')
-    plt.axvline(x=len(y) - 50, c='r', linestyle='--')
+    c = [x for x in range(len(y) - n_steps_out, len(y))]
+    plt.plot(c, test_predict, label=f'One-shot multi-step prediction ({n_steps_out} days)')
+    plt.axvline(x=len(y) - n_steps_out, c='r', linestyle='--')
     plt.legend()
     plt.show()
 
