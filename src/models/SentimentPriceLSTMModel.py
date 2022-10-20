@@ -151,7 +151,7 @@ def main(coin: str, filepath: str):
     plt.plot(df.open)
     plt.xlabel("Time")
     plt.ylabel("Price (USD)")
-    plt.title("Bitcoin price over time")
+    plt.title(f"{coin.capitalize()} price over time")
     plt.show()
 
     X, y = df.drop(columns=['open']), df.open.values
