@@ -112,8 +112,6 @@ def main(coin: str, filepath: str):
     logging.info("ACTUAL PRICES:")
     logging.info(f'{model.y_test}\n')
 
-    comparisonGraph(model.y_test, predictions, coin, f'outputs/graphs/SampleSentimentModel_comparison_{coin}.png')
-
 
 if __name__ == "__main__":
     coins = ['bitcoin', 'ethereum', 'solana']

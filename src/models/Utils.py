@@ -119,10 +119,13 @@ def comparisonGraph(y_true, y_pred, coin, output_path):
     """
     days_passed = len(y_pred)
     time = np.arange(days_passed)
-    plt.plot(time, y_true, 'red', label='Actual Price')
-    plt.plot(time, y_pred, 'blue', label='Predicted Price')
+    plt.style.use('seaborn-v0_8-pastel')
+    plt.figure(figsize=(10, 6))  # plotting
+    plt.plot(time, y_true, label='Actual Price')
+    plt.plot(time, y_pred, label='LSTM Predicted Price')
     plt.legend()
     plt.xlabel('Time[days]')
-    plt.ylabel('Price')
+    plt.ylabel('Price (USD)')
     plt.title(f'{coin.capitalize()} price prediction')
     plt.savefig(output_path)
+    plt.show()

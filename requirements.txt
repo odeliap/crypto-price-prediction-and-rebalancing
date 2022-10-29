@@ -13,3 +13,4 @@ tensorflow
 streamlit
 matplotlib
 torch
+PyPortfolioOpt

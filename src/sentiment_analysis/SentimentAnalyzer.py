@@ -140,9 +140,9 @@ class SentimentAnalyzer:
 
 
 if __name__ == "__main__":
-    bitcoin_input_filepath = '../create_datasets/outputs/bitcoin_dataset.csv'
-    ethereum_input_filepath = '../create_datasets/outputs/ethereum_dataset.csv'
-    solana_input_filepath = '../create_datasets/outputs/solana_dataset.csv'
+    bitcoin_input_filepath = '../data_cleaner/outputs/bitcoin_dataset.csv'
+    ethereum_input_filepath = '../data_cleaner/outputs/ethereum_dataset.csv'
+    solana_input_filepath = '../data_cleaner/outputs/solana_dataset.csv'
 
     filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath]
 
