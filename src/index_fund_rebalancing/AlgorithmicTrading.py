@@ -98,8 +98,8 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
 
     :param start_date:
     """
-    sp500 = yf.download("^GSPC", start=start_date, end=end_date, internal='1d')
-    sp500["monthly_returns"] = sp500["Adj Close"].pct_change().fillna(0)
+    bitw_fund = yf.download("BITW", start=start_date, end=end_date, internal='1d')
+    bitw_fund["monthly_returns"] = bitw_fund["Adj Close"].pct_change().fillna(0)
 
     stock_returns = pd.DataFrame()
 
@@ -120,13 +120,13 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
     logging.info(" ")
 
     logging.info("S&P500 Index Performance")
-    logging.info("CAGR: " + str(CAGR(sp500, datetime_start, datetime_end)))
-    logging.info("Sharpe Ratio: " + str(sharpe_ratio(sp500, 0.03, datetime_start, datetime_end)))
-    logging.info("Maximum Drawdown: " + str(maximum_drawdown(sp500)))
+    logging.info("CAGR: " + str(CAGR(bitw_fund, datetime_start, datetime_end)))
+    logging.info("Sharpe Ratio: " + str(sharpe_ratio(bitw_fund, 0.03, datetime_start, datetime_end)))
+    logging.info("Maximum Drawdown: " + str(maximum_drawdown(bitw_fund)))
 
     fig, ax = plt.subplots()
     plt.plot((1 + portfolio(stock_returns, numStocks, numRev)).cumprod())
-    plt.plot((1 + sp500["monthly_returns"].reset_index(drop=True)).cumprod())
+    plt.plot((1 + bitw_fund["monthly_returns"].reset_index(drop=True)).cumprod())
     plt.title("S&P500 Index Return vs Rebalancing Strategy Return")
     plt.ylabel("cumulative return")
     plt.xlabel("months")
