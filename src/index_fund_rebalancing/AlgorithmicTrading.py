@@ -124,6 +124,7 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
     logging.info("Sharpe Ratio: " + str(sharpe_ratio(bitw_fund, 0.03, datetime_start, datetime_end)))
     logging.info("Maximum Drawdown: " + str(maximum_drawdown(bitw_fund)))
 
+    plt.style.use('seaborn-v0_8-pastel')
     fig, ax = plt.subplots()
     plt.plot((1 + portfolio(stock_returns, numStocks, numRev)).cumprod())
     plt.plot((1 + bitw_fund["monthly_returns"].reset_index(drop=True)).cumprod())
