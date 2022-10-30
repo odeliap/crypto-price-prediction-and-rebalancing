@@ -127,7 +127,7 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
     fig, ax = plt.subplots()
     plt.plot((1 + portfolio(stock_returns, numStocks, numRev)).cumprod())
     plt.plot((1 + bitw_fund["monthly_returns"].reset_index(drop=True)).cumprod())
-    plt.title("S&P500 Index Return vs Rebalancing Strategy Return")
+    plt.title("BITW Index Return vs Rebalancing Strategy Return")
     plt.ylabel("cumulative return")
     plt.xlabel("months")
     ax.legend(["Strategy Return", "Index Return"])
