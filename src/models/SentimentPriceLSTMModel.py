@@ -111,7 +111,7 @@ def training_loop(n_epochs, lstm, optimiser, loss_fn, X_train, y_train,
         test_preds = lstm(X_test)
         test_loss = loss_fn(test_preds, y_test)
         if epoch % 100 == 0:
-            print("Epoch: %d, train loss: %1.5f, test loss: %1.5f" % (epoch,
+            logging.info("Epoch: %d, train loss: %1.5f, test loss: %1.5f" % (epoch,
                                                                       loss.item(),
                                                                       test_loss.item()))
 
