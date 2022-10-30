@@ -5,9 +5,10 @@ This project uses sentiment analysis and an LSTM model for cryptocurrency price 
 
 ## Setup Virtual Environment
 
-This project utilizes python version 3.9.7, but it should be compatible with other versions of python3.
-To set this version, I used `pyenv` (common python version management tool). To install `pyenv`, follows 
-the directions at the [pyenv repository](https://github.com/pyenv/pyenv#getting-pyenv).
+This project utilizes python version 3.9.12, but it should be compatible with other versions of python3 
+except for version 3.9.7 which is incompatible with `streamlit`. To set this version, I used `pyenv` 
+(common python version management tool). To install `pyenv`, follows the directions at the 
+[pyenv repository](https://github.com/pyenv/pyenv#getting-pyenv).
 
 ```commandline
 pyenv install 3.9.12
