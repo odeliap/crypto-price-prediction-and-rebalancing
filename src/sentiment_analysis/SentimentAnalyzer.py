@@ -24,16 +24,14 @@ KEEP_COLUMNS = ['open', 'high', 'low', 'subjectivity', 'polarity', 'compound', '
 
 class SentimentAnalyzer:
 
-    def __init__(self, filepath):
+    def __init__(self, dataframe):
         """
         Initializes a new sentiment analyzer object.
 
-        :param filepath: path to dataset to perform sentiment analysis on
-        :type str
+        :param dataframe: dataset to perform sentiment analysis on
+        :type pd.DataFrame
         """
-        self.filepath = filepath
-
-        self.dataframe = pd.read_csv(filepath)
+        self.dataframe = dataframe
 
         self.dataframe['text'] = self.clean_headlines()
 
@@ -151,6 +149,7 @@ if __name__ == "__main__":
         filename = file[file.rfind('/')+1:]
         output_filename = filename.replace('dataset', 'sentiment_dataset')
         output_filepath = f'outputs/{output_filename}'
-        analyzer = SentimentAnalyzer(file)
+        dataframe = pd.read_csv(file)
+        analyzer = SentimentAnalyzer(dataframe)
         analyzer.dataframe.to_csv(output_filepath)
         logging.info(f'finished processing {file}')

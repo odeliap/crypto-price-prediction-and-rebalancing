@@ -25,7 +25,7 @@ CATEGORIES = ['business', 'technology']
 COUNTRY = 'us'
 DATE_FORMAT = '%Y-%m-%d'
 END_DATE = datetime.today().strftime(DATE_FORMAT) # Set scraping end date
-START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(months=1) # Set scraping start date
+START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(days=30) # Set scraping start date
 SORT_BY = 'popularity'
 PAGE_SIZE = 100
 
@@ -207,8 +207,8 @@ class NewsApiScraper:
         return math.ceil((total_results - 100)/100)
 
 
-def main(coin: str) -> str:
+def main(coin: str) -> pd.DataFrame:
     scraper = NewsApiScraper(coin)
     scraper.get_all_headlines()
     scraper.get_top_headlines()
-    return scraper.headlines['text']
+    return scraper.headlines

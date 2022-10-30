@@ -1,38 +1,71 @@
+"""
+Simple UI made with streamlit for easy visualization of the proposed workflow.
+"""
+
 # ----------- Libraries -----------
+import logging
 
 import streamlit as st
+import pandas as pd
 
 import time
+from datetime import datetime, timedelta
 
-from scraper.NewsApiScraper import main
+import yfinance as yf
 
-# ----------- App -----------
+from scraper.NewsApiScraper import main as newsScraper
+from sentiment_analysis.SentimentAnalyzer import SentimentAnalyzer
+from models.SentimentPriceLSTMModel import predict
+from index_fund_rebalancing.AlgorithmicTrading import main as rebalancingAlgorithm
+from index_fund_rebalancing.AlgorithmicTrading import CAGR, sharpe_ratio, maximum_drawdown
+
+# Set logging level
+logging.basicConfig(level=logging.INFO)
+
+# ----------- Constants -----------
 
 st.header('Crytpo Price Prediction and Index Fund Rebalancing')
 
-cryptocurrencies = ['Bitcoin', 'Ethereum', 'Solana']
+cryptocurrencies = {'Bitcoin': 'BTC-USD', 'Ethereum': 'ETH-USD', 'Solana': 'SOL-USD'}
 
-user_coins = st.multiselect(cryptocurrencies)
+days_to_subtract = 100
+date_format = '%Y-%m-%d'
 
-predicted_prices = dict()
-predicted_price_delta = dict()
-holding_amounts = dict()
+n_steps_in = 30
 
-for coin in user_coins:
-    holding = st.number_input(f'How much {coin} do you own?')
-    holding_amounts[coin] = holding
-    # TODO: 1) get previous price for coin
+numStocks = 3
+numRev = 1
 
+# ----------- App -----------
+
+predicted_prices = pd.DataFrame()
+
+# Use yfinance to get dataframe of previous prices for these coins
+end_date = datetime.today()
+start_date = end_date - timedelta(days=days_to_subtract)
+
+end_date_str = end_date.strftime(date_format)
+start_date_str = start_date.strftime(date_format)
+
+for coin in cryptocurrencies.keys():
+    with st.spinner(f'Retrieving previous daily prices for {coin}'):
+        prev_stock_prices = yf.download(cryptocurrencies.get(coin), start=start_date_str, end=end_date_str, interval='1d')
+        prev_stock_prices_clean = prev_stock_prices.dropna()
     with st.spinner(f'Scraping {coin} news'):
-        main(coin)
-        # TODO: 2) scrape related data
+        dataframe = newsScraper(coin)
         time.sleep(10)
     with st.spinner(f'Getting sentiment for found news'):
-        # TODO: 3) get sentiment for found news data
+        # TODO: format previous stock prices with sentiment dataframe to make input to sentiment analyzer
+        sentiment_dataframe = SentimentAnalyzer(dataframe).dataframe
         time.sleep(10)
     with st.spinner(f'Retrieving predicted price for {coin}'):
-        # TODO: 4) input date and scraped data into model to retrieve predicted price
-        # TODO: 5) save predicted price and price delta to respective map
+        predictions = predict(sentiment_dataframe, coin, n_steps_in)
         time.sleep(10)
 
-# TODO: input predicted_prices, predicted_price_delta, and holding_amounts to rebalancing algorithm
+
+rebalanced_portfolio, stock_returns = rebalancingAlgorithm(predicted_prices, numStocks, numRev)
+
+logging.info("Rebalanced Portfolio Performance")
+logging.info("CAGR: " + str(CAGR(rebalanced_portfolio, start_date, end_date)))
+logging.info("Sharpe Ratio: " + str(sharpe_ratio(rebalanced_portfolio, 0.03, start_date, end_date)))
+logging.info("Maximum Drawdown: " + str(maximum_drawdown(rebalanced_portfolio)))

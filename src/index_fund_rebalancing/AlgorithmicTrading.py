@@ -90,17 +90,13 @@ def maximum_drawdown(data):
     return max_dd
 
 
-def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: int, numRev: int):
+def main(stock_data: pd.DataFrame, numStocks: int, numRev: int):
     """
     :param stock_data: input dataframe, must be indexed on date and have columns of
     coin names corresponding to stock price in USD.
     :type: pd.DataFrame
 
-    :param start_date:
     """
-    bitw_fund = yf.download("BITW", start=start_date, end=end_date, internal='1d')
-    bitw_fund["monthly_returns"] = bitw_fund["Adj Close"].pct_change().fillna(0)
-
     stock_returns = pd.DataFrame()
 
     for coin in coins:
@@ -108,10 +104,30 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
 
     stock_returns = stock_returns.dropna()
 
+    rebalanced_portfolio = portfolio(stock_returns, numStocks, numRev)
+    return rebalanced_portfolio, stock_returns
+
+
+if __name__ == "__main__":
+    start_date = '2022-05-1'
+    end_date = '2022-07-1'
+
+    numStocks = 3
+    numRev = 1
+
+    bitw_fund = yf.download("BITW", start=start_date, end=end_date, internal='1d')
+    bitw_fund["monthly_returns"] = bitw_fund["Adj Close"].pct_change().fillna(0)
+
+    tickers = ['BTC', 'BCH', 'LTC', 'EOS', 'NEO', 'DASH', 'TRX']
+
+    stock_data = yf.download(tickers,start=start_date, end=end_date,interval='1d')
+    stock_data = stock_data.dropna()
+
+    rebalanced_portfolio, stock_returns = main(stock_data, numStocks, numRev)
+
     datetime_start = datetime.strptime(start_date, '%Y-%m-%d')
     datetime_end = datetime.strptime(end_date, '%Y-%m-%d')
 
-    rebalanced_portfolio = portfolio(stock_returns, numStocks, numRev)
     logging.info("Rebalanced Portfolio Performance")
     logging.info("CAGR: " + str(CAGR(rebalanced_portfolio, datetime_start, datetime_end)))
     logging.info("Sharpe Ratio: " + str(sharpe_ratio(rebalanced_portfolio, 0.03, datetime_start, datetime_end)))
@@ -134,11 +150,3 @@ def main(stock_data: pd.DataFrame, start_date: str, end_date: str, numStocks: in
     ax.legend(["Strategy Return", "Index Return"])
     plt.savefig(f"outputs/graphs/index_return_vs_rebalancing_strategy.png", dpi=300)
     plt.show()
-
-if __name__ == "__main__":
-    tickers = ['BTC', 'BCH', 'LTC', 'EOS', 'NEO', 'DASH', 'TRX']
-
-    stock_data = yf.download(tickers,start='2022-05-1', end='2022-07-1',interval='1d')
-    stock_data = stock_data.dropna()
-
-    main(stock_data, '2022-05-1', '2022-07-1', 3, 1)

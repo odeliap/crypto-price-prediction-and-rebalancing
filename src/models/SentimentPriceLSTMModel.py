@@ -301,7 +301,7 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int):
 
 
 if __name__ == "__main__":
-    coins = {'bitcoin': [100, 50], 'ethereum': [50, 25], 'solana': [20, 10]}
+    coins = {'bitcoin': [30, 15], 'ethereum': [30, 15], 'solana': [30, 15]}
 
     for coin in coins.keys():
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
