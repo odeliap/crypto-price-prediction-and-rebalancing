@@ -1,14 +1,11 @@
 """
-Class to model index fund performance based on predictions.
+Model index fund performance based on predictions.
 
 Made by following tutorial:
 https://python.plainenglish.io/how-to-improve-investment-portfolio-with-rebalancing-strategy-in-python-a58841ee8b5e
 
 Link to yfinance library:
 https://pypi.org/project/yfinance/
-
-Look into:
-https://intrinio.medium.com/how-to-rebalance-your-stock-portfolio-with-python-71a188d70087
 """
 
 # ------------ Libraries ------------
@@ -32,19 +29,23 @@ coins = ['BTC', 'BCH', 'LTC', 'EOS', 'NEO', 'DASH', 'TRX']
 
 # ------------ Logic ------------
 
-def portfolio(data, numStocks, numRev):
+def portfolio(data: pd.DataFrame, numStocks: int, numReview: int):
     """
-    :param data: dataframe of coins to corresponding stock price (USD) indexed by date
-    :type: pd.DataFrame
+    Create a portfolio.
 
-    :param numStocks: number of stocks in fund
-    :type: int
+    Parameters
+    ----------
+    data : pandas dataframe
+        Dataset of coins to corresponding stock price (USD) indexed by date.
+    numStocks : int
+        Number of stocks to have in the fund.
+    numReview : int
+        Number of "bad stocks" to remove
 
-    :param numRev: number of "bad stocks" to remove
-    :type: int
-
-    :return return_dataframe: average monthly return
-    :rtype: pd.DataFrame
+    Returns
+    -------
+    return_dataframe : DataFrame
+        Dataset of average monthly returns.
     """
     dataframe = data.copy()
     selected_stocks = []
@@ -53,7 +54,7 @@ def portfolio(data, numStocks, numRev):
     for i in range(len(dataframe)):
         if len(selected_stocks) > 0:
             average_monthly_return.append(dataframe[selected_stocks].iloc[i, :].mean())
-            bad_stocks = dataframe[selected_stocks].iloc[i, :].sort_values(ascending=True)[:numRev].index.values.tolist()
+            bad_stocks = dataframe[selected_stocks].iloc[i, :].sort_values(ascending=True)[:numReview].index.values.tolist()
             selected_stocks = [t for t in selected_stocks if t not in bad_stocks]
         fill = numStocks - len(selected_stocks)
         new_picks = dataframe.iloc[i, :].sort_values(ascending=False)[:fill].index.values.tolist()
@@ -61,7 +62,24 @@ def portfolio(data, numStocks, numRev):
     return_dataframe = pd.DataFrame(np.array(average_monthly_return), columns=["monthly_returns"])
     return return_dataframe
 
-def CAGR(data, start_date: datetime, end_date: datetime):
+def CAGR(data: pd.DataFrame, start_date: datetime, end_date: datetime):
+    """
+    Calculate and return compound annual growth rate.
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Rebalanced portfolio dataset.
+    start_date : datetime date
+        Start date for tracking prices.
+    end_date : datetime date
+        End date for tracking prices.
+
+    Returns
+    -------
+    cagr
+        Compound annual growth rate.
+    """
     dataframe = data.copy()
     dataframe['cumulative_returns'] = (1 + dataframe['monthly_returns']).cumprod()
     trading_days = end_date - start_date
@@ -69,16 +87,19 @@ def CAGR(data, start_date: datetime, end_date: datetime):
     cagr = (dataframe['cumulative_returns'][len(dataframe)-1])**(1/n) - 1
     return cagr
 
+
 def volatility(data, start_date: datetime, end_date: datetime):
     df = data.copy()
     trading_days = end_date - start_date
     vol = df['monthly_returns'].std() * np.sqrt(trading_days.days)
     return vol
 
+
 def sharpe_ratio(data, rf, start_date, end_date):
     dataframe = data.copy()
     sharpe = (CAGR(data, start_date, end_date) - rf) / volatility(dataframe, start_date, end_date)
     return sharpe
+
 
 def maximum_drawdown(data):
     dataframe = data.copy()

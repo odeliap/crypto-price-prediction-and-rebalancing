@@ -23,17 +23,19 @@ def clean_data(
     """
     Clean data.
 
-    :param filepath: path to news file to clean
-    :type: str
+    Parameters
+    ----------
+    filepath : str
+        Path to news file to clean.
+    save_columns : list of strings
+        Columns to save from the dataset.
+    rename_columns_dict : dictionary
+        Mapping between existing column names to new column names.
 
-    :param save_columns: list of columns to save
-    :type: List[str]
-
-    :param rename_columns_dict: dictionary mapping existing column names to new column names
-    :type: dict
-
-    :return: dataframe: cleaned dataframe
-    :rtype pd.DataFrame
+    Returns
+    -------
+    DataFrame
+        Cleaned dataframe.
     """
     dataframe = pd.read_csv(filepath)
     dataframe = dataframe.rename(columns=rename_columns_dict)
@@ -43,13 +45,17 @@ def clean_data(
 
 def clean_hms_timestamps(dataframe: pd.DataFrame):
     """
-    Convert yyyy-mm-dd hh:mm:ss timestamp to yyyy-mm-dd timestamps
+    Convert yyyy-mm-dd hh:mm:ss timestamp to yyyy-mm-dd timestamps.
 
-    :param dataframe: dataframe to clean timestamps for
-    :type: pd.DataFrame
+    Parameters
+    ----------
+    dataframe : dataframe object
+        Dataset for which to convert hms timestamps.
 
-    :return: dataframe: dataframe with cleaned timestamps
-    :rtype pd.DataFrame
+    Returns
+    -------
+    DataFrame
+        Dataset with standardized timestamps
     """
     dataframe['timestamp'] = dataframe['timestamp'].map(lambda x: x[0:x.index(' ')])
     return dataframe
@@ -59,11 +65,15 @@ def utc_to_standard_timestamp(dataframe: pd.DataFrame):
     """
     Convert epoch timestamp to yyyy-mm-dd timestamps
 
-    :param dataframe: dataframe to clean timestamps for
-    :type: pd.DataFrame
+    Parameters
+    ----------
+    dataframe : dataframe object
+        Dataset for which to convert utc timestamps.
 
-    :return: dataframe: dataframe with cleaned timestamps
-    :rtype pd.DataFrame
+    Returns
+    -------
+    DataFrame
+        Dataset with standardized timestamps
     """
     dataframe['timestamp'] = dataframe['timestamp'].map(lambda x: dt.datetime.utcfromtimestamp(x).strftime("%Y-%m-%d"))
     return dataframe
