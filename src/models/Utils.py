@@ -15,39 +15,61 @@ import pickle
 
 # ----------- Functions -----------
 
-def data_split(input_data, output_data, split = 0.2):
+def data_split(
+    X: np.array,
+    y: np.array,
+    split = 0.2
+) -> (np.array, np.array, np.array, np.array):
     """
     Use train_test_split from sklearn to split data into training and validation sets.
 
-    :param input_data: input or X data
+    Parameters
+    __________
+    X : array
+        Input data.
+    y : array
+        Corresponding output data.
+    test_split : float
+        Train-test split.
 
-    :param output_data: output or y data
-
-    :param split: train-test split
-    :type: double
-
-    :return x_train, x_test, y_train, y_test: the training and validation sets for each of input and output data
+    Returns
+    _______
+    x_train : array
+        Training input data.
+    x_test : array
+        Testing input data.
+    y_train : array
+        Training output data.
+    y_test : array
+        Testing output data.
     """
-    x_train, x_test, y_train, y_test = train_test_split(input_data, output_data, test_size = split, random_state = 0)
+    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = split, random_state = 0)
     return x_train, x_test, y_train, y_test
 
 
-def convergePrices(dataframe: pd.DataFrame, priceLabel: str, scaler = MinMaxScaler()) -> np.ndarray:
+def converge_prices(
+    dataframe: pd.DataFrame,
+    price_label: str,
+    scaler = MinMaxScaler()
+) -> np.ndarray:
     """
     Converge prices to values between 0 and 1.
 
-    :param dataframe: pandas dataframe to obtain price labels from
-    :type: pd.DataFrame
+    Parameters
+    __________
+    dataframe : pandas dataframe
+        Dataset from which to obtain price labels.
+    price_label : string
+        Column header name for price column.
+    scaler : scaler
+        Scaler with which to scale prices.
 
-    :param priceLabel: column header for price column
-    :type: str
-
-    :scaler scaler: scaler to scale with
-
-    :return: scaled_close: cleaned price label column (reshaped to have shape (x, y))
-    :rtype: np.ndarray
+    Returns
+    _______
+    scaled_close : 2d array-like
+        Cleaned price label column (reshaped to have shape (x, y))
     """
-    close_price = dataframe[priceLabel].values.reshape(-1, 1) # scaler expects data is shaped as (x, y) so we add dummy dimension
+    close_price = dataframe[price_label].values.reshape(-1, 1) # scaler expects data is shaped as (x, y) so we add dummy dimension
 
     scaled_close = scaler.fit_transform(close_price)
 
@@ -57,65 +79,87 @@ def convergePrices(dataframe: pd.DataFrame, priceLabel: str, scaler = MinMaxScal
     return scaled_close
 
 
-def saveModel(model, fullyQualifiedFilepath):
+def save_model(model, fully_qualified_filepath: str) -> None:
     """
     Save model to file.
 
-    :param model: neural network
-
-    :param fullyQualifiedFilepath: file path to save model to
-    :type: str
+    Parameters
+    __________
+    model : model
+        Neural network.
+    fully_qualified_filepath : string
+        File path to save model to.
     """
-    pickle.dump(model, open(fullyQualifiedFilepath, 'wb'))
+    pickle.dump(model, open(fully_qualified_filepath, 'wb'))
 
 
-def saveScaler(scaler, fullyQualifiedFilepath):
+def save_scaler(scaler, fully_qualified_filepath: str) -> None:
     """
     Save scaler to file.
 
-    :param scaler: scaler to save
-
-    :param fullyQualifiedFilepath: file path to save model to
-    :type: str
+    Parameters
+    __________
+    scaler : scaler
+        Scaler.
+    fully_qualified_filepath : string
+        File path to save scaler to.
     """
-    pickle.dump(scaler, open(fullyQualifiedFilepath, 'wb'))
+    pickle.dump(scaler, open(fully_qualified_filepath, 'wb'))
 
 
-def loadModel(fullyQualifiedFilepath):
+def load_model(fully_qualified_filepath: str):
     """
     Load model from path.
 
-    :param fullyQualifiedFilepath: file path to saved model
-    :type: str
+    Parameters
+    __________
+    fully_qualified_filepath : string
+        File path to load model from.
+
+    Returns
+    _______
+    model
+        Saved neural network.
     """
-    return pickle.load(open(fullyQualifiedFilepath), 'rb')
+    return pickle.load(open(fully_qualified_filepath), 'rb')
 
 
-def loadScaler(fullyQualifiedFilepath):
+def load_scaler(fully_qualified_filepath: str):
     """
     Load scaler from path.
 
-    :param fullyQualifiedFilepath: file path to saved scaler
-    :type: str
+    Parameters
+    __________
+    fully_qualified_filepath : string
+        File path to load scaler from.
+
+    Returns
+    _______
+    scaler
+        Saved scaler.
     """
-    return pickle.load(open(fullyQualifiedFilepath), 'rb')
+    return pickle.load(open(fully_qualified_filepath), 'rb')
 
 
-def comparisonGraph(y_true, y_pred, coin, output_path):
+def generate_comparison_graph(
+    y_true: np.array,
+    y_pred: np.array,
+    coin: str,
+    output_path: str
+) -> None:
     """
     Create a graph comparing actual and predicted values.
 
-    :param y_true: actual values
-    :type: 1d array-like
-
-    :param y_pred: predicted values
-    :type: 1d array-like
-
-    :param coin: name of related coin
-    :type: str
-
-    :param output_path: output path to save graph to
-    :type: str
+    Parameters
+    __________
+    y_true : 1d array-like
+        Actual price values.
+    y_pred : 1d array-like
+        Predicted price values.
+    coin : string
+        Name of related coin.
+    output_path : string
+        Output path to save graph to.
     """
     days_passed = len(y_pred)
     time = np.arange(days_passed)

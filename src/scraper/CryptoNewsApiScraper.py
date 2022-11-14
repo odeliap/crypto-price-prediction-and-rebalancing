@@ -7,13 +7,13 @@ import logging
 
 import pandas as pd
 
-from datetime import date, datetime
+from datetime import datetime
 
 from requests import Session
 from requests.exceptions import ConnectionError, Timeout, TooManyRedirects
 import json
 
-from util import dataframe_to_csv
+from Utils import dataframe_to_csv
 
 from crypto_news_api import CryptoControlAPI
 
@@ -22,19 +22,16 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-NEWS_API_KEY = 'gvpifrrlnsffapoedsbpc0e7vucofq9saqnqjnsm'
-MARKET_API_KEY = '1b7fcdab-bbfd-4753-840c-e8c853121fd7'
+news_api_key = 'gvpifrrlnsffapoedsbpc0e7vucofq9saqnqjnsm'
+market_api_key = '1b7fcdab-bbfd-4753-840c-e8c853121fd7'
 
-COLUMN_NAMES = ['title', 'text', 'timestamp', 'coin']
-COIN_ID_MAP_COLUMN_NAMES = ['slug', 'name', 'symbol']
+column_names = ['title', 'text', 'timestamp', 'coin']
+coin_id_map_col_names = ['slug', 'name', 'symbol']
 
-today = date.today()
-TODAY = today.strftime("%m-%d-%Y")
+headlines_filepath = f'datasets/news/processed/cryptonewsapi_news.csv'
+coin_id_map_filepath = 'datasets/util/cryptonewsapi_id_map.csv'
 
-HEADLINES_FILEPATH = f'datasets/news/processed/cryptonewsapi_news.csv'
-COIN_ID_MAP_FILEPATH = 'datasets/util/cryptonewsapi_id_map.csv'
-
-LANGUAGE = "en"
+language = "en"
 
 # ------------- Class -------------
 
@@ -49,9 +46,9 @@ class CryptoNewsApiScraper:
         """
         Instantiate a crypto news api scraper object.
         """
-        self.newsapi = CryptoControlAPI(apiKey=NEWS_API_KEY) # Connect to the CrytpoControl API
+        self.newsapi = CryptoControlAPI(apiKey=news_api_key) # Connect to the CrytpoControl API
 
-        self.headlines = pd.DataFrame(columns=COLUMN_NAMES)
+        self.headlines = pd.DataFrame(columns=column_names)
 
         self.coin_ids = self.get_all_crypto_coin_ids()
 
@@ -60,7 +57,7 @@ class CryptoNewsApiScraper:
         """
         Calls crypto news api to get top headlines and appends to self.headlines
         """
-        data = json.loads(self.newsapi.getTopNews(LANGUAGE))['data']
+        data = json.loads(self.newsapi.getTopNews(language))['data']
         title = data['title']
         text = data['text']
         timestamp = datetime.utcfromtimestamp(int(data['date'])).strftime("%Y-%m-%d")
@@ -88,10 +85,12 @@ class CryptoNewsApiScraper:
         """
         Calls Coinmarketcapi API to get mapping of coin name to id
 
-        :return coin_ids: Python dictionary mapping cryptocurrency name to id
-        :rtype dict
+        Returns
+        _______
+        coin_ids: dictionary
+            Mapping between cryptocurrency name to id.
         """
-        coin_ids = pd.DataFrame(columns=COIN_ID_MAP_COLUMN_NAMES)
+        coin_ids = pd.DataFrame(columns=coin_id_map_col_names)
 
         url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/map' # Coinmarketcap API url for getting cryptocurrency mapping of name to id
 
@@ -99,7 +98,7 @@ class CryptoNewsApiScraper:
 
         headers = {
             'Accepts': 'application/json',
-            'X-CMC_PRO_API_KEY': MARKET_API_KEY
+            'X-CMC_PRO_API_KEY': market_api_key
         }
 
         session = Session()
@@ -124,9 +123,11 @@ class CryptoNewsApiScraper:
 
 
 if __name__ == "__main__":
-    # TODO: fix api call, getting bad request
+    """
+    Instantiate a new scraper object and scrape for all the available coins
+    """
     scraper = CryptoNewsApiScraper()
     scraper.get_top_news()
     scraper.get_top_news_by_coin()
-    dataframe_to_csv(scraper.headlines, HEADLINES_FILEPATH)
-    dataframe_to_csv(scraper.coin_ids, COIN_ID_MAP_FILEPATH)
+    dataframe_to_csv(scraper.headlines, headlines_filepath)
+    dataframe_to_csv(scraper.coin_ids, coin_id_map_filepath)

@@ -1,7 +1,9 @@
 """
-Sample non-LSTM sentiment model (predicts price increase/decrease only)
+Sample non-LSTM sentiment model.
 
-Closely modeled after tutorial model (Spring Seminar tutorial)
+Predicts price increase/decrease only using Linear Discriminant Analysis.
+
+Closely modeled after tutorial model from Spring Seminar tutorial assignment.
 """
 
 # ----------- Libraries -----------
@@ -13,41 +15,49 @@ from sklearn.metrics import classification_report
 
 import numpy as np
 
-from Utils import data_split, saveModel, loadModel, comparisonGraph
+from Utils import data_split, save_model, load_model
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-modelSavedPath = './outputs/models/SampleSentimentModel'
+modelSavedPath = './outputs/models/SampleSentimentModel' # Path for saving model
 
-train_split = 0.1
+test_split = 0.1 # train test split
+
+coins = ['bitcoin', 'ethereum', 'solana'] # available coins
 
 # ----------- Class -----------
 
 class SampleSentimentModel:
 
-    def __init__(self, coin: str, dataframe: pd.DataFrame, priceLabel: str):
+    def __init__(
+        self,
+        coin: str,
+        dataframe: pd.DataFrame,
+        price_label: str
+    ) -> None:
         """
         Initialize SampleSentimentModel
 
-        :param coin: coin of interest
-        :type: str
-
-        :param dataframe: pandas dataframe to process
-        :type: pd.DataFrame
-
-        :param priceLabel: column header for price column
-        :type: str
+        Parameters
+        ----------
+        coin : string
+            Coin of interest.
+        dataframe : pandas dataframe
+            Dataset to process.
+        price_label : string
+            Column header name for price column.
         """
-        drop_columns = ['open', 'high', 'low', 'timestamp']
+        drop_columns = ['open', 'high', 'low', 'timestamp'] # Define columns to drop from the dataframe
         features = dataframe
-        features = np.array(features.drop(drop_columns, axis=1))
-        price_data = np.array(dataframe[priceLabel])
+        features = np.array(features.drop(drop_columns, axis=1)) # Create input features from non drop columns
+        price_data = np.array(dataframe[price_label]) # Define price output data
 
-        label_price_data = []
+        label_price_data = [] # Create list to store label price data
 
+        # Convert prices to labels (0 = decreasing, 1 = increasing)
         previous_price = 0
         for price in price_data:
             if price > previous_price:
@@ -56,66 +66,87 @@ class SampleSentimentModel:
                 label_price_data.append(0)
             previous_price = price
 
-        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, label_price_data, train_split)
+        # Split input data into training and testing data
+        self.x_train, self.x_test, self.y_train, self.y_test = data_split(features, label_price_data, test_split)
 
+        # Create a linear discriminant model and fit the training data to it
         self.model = LinearDiscriminantAnalysis().fit(self.x_train, self.y_train)
-        saveModel(self.model, f'{modelSavedPath}_{coin}.sav')
+
+        # Save the model
+        save_model(self.model, f'{modelSavedPath}_{coin}.sav')
 
 
-    def predict(self, input_data):
+    def predict(self, X: np.array) -> np.array:
         """
-        Predict price for input data.
+        Predict future prices from input data.
 
-        :param input_data: input or x data
+        Parameters
+        ----------
+        X : numpy array
+            Input data.
 
-        :return predictions: predicted prices
+        Returns
+        -------
+        predictions : numpy array
+            Predicted future prices.
         """
-        predictions = self.model.predict(input_data)
+        predictions = self.model.predict(X)
         return predictions
 
 
-def predict(coin, input_data):
+def predict(coin: str, X: np.array) -> np.array:
     """
-    Predict price for input data based on saved model.
+    Predict future prices from input data based on saved model.
 
-    :param input_data: input or x data
+    Parameters
+    ----------
+    coin : string
+        Coin of interest.
+    X : numpy array
+        Input data.
 
-    :return predictions: predicted prices
+    Returns
+    -------
+    predictions : numpy array
+        Predicted future prices.
     """
-    loaded_model = loadModel(f'{modelSavedPath}_{coin}.sav')
-    predictions = loaded_model.predict(input_data)
+    loaded_model = load_model(f'{modelSavedPath}_{coin}.sav') # Load the saved model
+    predictions = loaded_model.predict(X) # Predict prices
     return predictions
 
 
-def main(coin: str, filepath: str):
+def main(coin: str, filepath: str) -> None:
     """
     Generate model
 
-    :param coin: name of coin to get inputs for
-    :type: str
-
-    :param filepath: path to csv file with related data for coin
-    :type: str
-
-    :return predictions: predicted prices
+    Parameters
+    ----------
+    coin : string
+        Coin of interest.
+    filepath : string
+        Path to csv file with related data for coin.
     """
     logging.info(f"starting up {coin} sample sentiment model")
 
-    dataframe = pd.read_csv(filepath)
+    dataframe = pd.read_csv(filepath) # Read in dataset
 
-    model = SampleSentimentModel(coin, dataframe, 'open')
-    predictions = model.predict(model.x_test)
-    logging.info(classification_report(model.y_test, predictions))
+    model = SampleSentimentModel(coin, dataframe, 'open') # Initiate model
 
-    logging.info("PREDICTIONS:")
+    predictions = model.predict(model.x_test) # Get predictions from test data
+
+    logging.info(classification_report(model.y_test, predictions)) # Generate classification report from actual and predicted prices
+
+    # Log the actual and predicted prices
+    logging.info("Predictions:")
     logging.info(f'{predictions}\n')
-    logging.info("ACTUAL PRICES:")
+    logging.info("Actual Prices:")
     logging.info(f'{model.y_test}\n')
 
 
 if __name__ == "__main__":
-    coins = ['bitcoin', 'ethereum', 'solana']
-
+    """
+    Loop over available coins to generate a saved model and metrics for each.
+    """
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
