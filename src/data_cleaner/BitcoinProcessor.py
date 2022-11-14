@@ -26,7 +26,9 @@ price_filepath = 'datasets/price/bitcoin/bitcoin_price.csv'
 # ------------- Class -------------
 class BitcoinProcessor:
 
-    def __init__(self):
+    def __init__(
+        self
+    ) -> None:
         """
         Initialize BitcoinProcessor
         """
@@ -41,7 +43,7 @@ class BitcoinProcessor:
 
 
     @staticmethod
-    def combine_dataframes_with_transform(dataframes: List[pd.DataFrame]):
+    def combine_dataframes_with_transform(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
         """
         Combine news and price dataframes into cohesive dataframe.
 
@@ -63,7 +65,7 @@ class BitcoinProcessor:
 
 
     @staticmethod
-    def clean_news_and_price(filepath: str):
+    def clean_news_and_price(filepath: str) -> pd.DataFrame:
         """
         Clean news and price file.
 

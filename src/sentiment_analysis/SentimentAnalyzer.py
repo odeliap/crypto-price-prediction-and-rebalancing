@@ -17,19 +17,31 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-KEEP_COLUMNS = ['open', 'high', 'low', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral',
+keep_columns = ['open', 'high', 'low', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral',
                 'positive', 'timestamp']
+
+# Set filepaths
+bitcoin_input_filepath = '../data_cleaner/outputs/bitcoin_dataset.csv'
+ethereum_input_filepath = '../data_cleaner/outputs/ethereum_dataset.csv'
+solana_input_filepath = '../data_cleaner/outputs/solana_dataset.csv'
+
+filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath] # files to perform sentiment analysis on
 
 # ------------- Class -------------
 
 class SentimentAnalyzer:
 
-    def __init__(self, dataframe):
+    def __init__(
+        self,
+        dataframe: pd.DataFrame
+    ) -> None:
         """
         Initializes a new sentiment analyzer object.
 
-        :param dataframe: dataset to perform sentiment analysis on
-        :type pd.DataFrame
+        Parameters
+        __________
+        dataframe : pandas dataframe
+            Dataset to perform sentiment analysis on.
         """
         self.dataframe = dataframe
 
@@ -40,15 +52,17 @@ class SentimentAnalyzer:
 
         self.daily_sentiment_score_retriever()
 
-        self.dataframe = self.dataframe[KEEP_COLUMNS]
+        self.dataframe = self.dataframe[keep_columns]
 
 
     def clean_headlines(self) -> List[str]:
         """
         Cleans headlines and returns list of cleaned headlines.
 
-        :return: clean_headlines: list of clean headlines
-        :rtype: List[str]
+        Returns
+        __________
+        clean_headlines : list of strings
+            Clean news headlines.
         """
         headlines = []
         clean_headlines = []
@@ -70,7 +84,11 @@ class SentimentAnalyzer:
         return clean_headlines
 
 
-    def daily_sentiment_score_retriever(self):
+    def daily_sentiment_score_retriever(self) -> None:
+        """
+        Update dataframe with columns for sentiment scores
+        of compound, negative, neutral, and positive.
+        """
         compound = []
         neg = []
         pos = []
@@ -90,45 +108,59 @@ class SentimentAnalyzer:
 
 
     @staticmethod
-    def get_subjectivity(text):
+    def get_subjectivity(text: str) -> float:
         """
         Get subjectivity of text.
 
-        :param text: text to get subjectivity for
-        :type str
+        Parameters
+        __________
+        text : string
+            Text to get subjectivity for.
 
-        :return: subjectivity score for inputted text
-        :rtype: float
+        Returns
+        _______
+        subjectivity_score : float
+            Subjectivity score for inputted text.
         """
         logging.info('getting subjectivity')
-        return TextBlob(text).sentiment.subjectivity
+        subjectivity_score = TextBlob(text).sentiment.subjectivity
+        return subjectivity_score
 
 
     @staticmethod
-    def get_polarity(text):
+    def get_polarity(text: str) -> float:
         """
         Get polarity of text.
 
-        :param text: text to get polarity for
-        :type str
+        Parameters
+        __________
+        text : string
+            Text to get polarity for.
 
-        :return: polarity score for inputted text
-        :rtype float
+        Returns
+        _______
+        polarity_score : float
+            Polarity score for inputted text.
         """
         logging.info('getting polarity')
-        return TextBlob(text).sentiment.polarity
+        polarity_score = TextBlob(text).sentiment.polarity
+        return polarity_score
 
 
     @staticmethod
-    def get_SIA(text):
+    def get_SIA(text: str) -> dict:
         """
         Get sentiment score of text.
 
-        :param text: text to get sentiment score for
-        :type str
+        Parameters
+        __________
+        text : string
+            Text to get sentiment score for.
 
-        :return: sentiment: Python dictionary of sentiment scores for inputted text
-        :rtype dict[float]
+        Returns
+        _______
+        sentiment : dictionary
+            Sentiment scores for inputted text.
         """
         logging.info('getting SIA')
         sia = SentimentIntensityAnalyzer()
@@ -138,12 +170,9 @@ class SentimentAnalyzer:
 
 
 if __name__ == "__main__":
-    bitcoin_input_filepath = '../data_cleaner/outputs/bitcoin_dataset.csv'
-    ethereum_input_filepath = '../data_cleaner/outputs/ethereum_dataset.csv'
-    solana_input_filepath = '../data_cleaner/outputs/solana_dataset.csv'
-
-    filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath]
-
+    """
+    Loop over files and perform sentiment analysis for each.
+    """
     for file in filepaths:
         logging.info(f'processing file: {file}')
         filename = file[file.rfind('/')+1:]

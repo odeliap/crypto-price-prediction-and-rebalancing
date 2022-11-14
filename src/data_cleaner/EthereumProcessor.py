@@ -23,7 +23,9 @@ price_filepath2 = 'datasets/price/ethereum/ethereum_price2.csv'
 # ------------- Class -------------
 class EthereumProcessor:
 
-    def __init__(self):
+    def __init__(
+        self
+    ) -> None:
         """
         Initialize EthereumProcessor
         """
@@ -51,7 +53,7 @@ class EthereumProcessor:
         )
 
 
-    def combine_dataframes(self):
+    def combine_dataframes(self) -> pd.DataFrame:
         """
         Combine news and price dataframes into cohesive dataframe.
 

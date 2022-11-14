@@ -19,7 +19,7 @@ coins = ['bitcoin', 'ethereum', 'solana']
 
 # ------------- Functions -------------
 
-def replaceWithConstantSentiment(dataframe: pd.DataFrame, value: int, sentiment_cols: List[str]):
+def replaceWithConstantSentiment(dataframe: pd.DataFrame, value: int, sentiment_cols: List[str]) -> pd.DataFrame:
     """
     Replace all sentiment columns with constant values.
 

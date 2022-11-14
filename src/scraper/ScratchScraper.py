@@ -19,38 +19,43 @@ from typing import List
 logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
-pagesToGet = 1
+pages_to_get = 1
 
 
 # ------------- Class -------------
 class ScratchScraper:
 
-    def __init__(self, urls: List[str], filename: str, coin: str):
+    def __init__(
+        self,
+        urls: List[str],
+        filename: str,
+        coin: str
+    ) -> None:
         """
         Initialize Scraper object.
 
-        :param urls: list of urls to scrape data for
-        :type: List[str]
-
-        :param filename: file to save scraped data to
-        :type: str
-
-        :param coin: coin to scrape data for
-        :type: str
+        Parameters
+        __________
+        urls : list of strings
+            Urls to scrape data from.
+        filename : string
+            File name to save scraped data to.
+        coin : string
+            Coin for which to scrape data.
         """
         self.upperframe = []
         self.file = open(filename, "w", encoding = 'utf-8')
 
         for url in urls:
-            for page in range(1, pagesToGet+1):
+            for page in range(1, pages_to_get+1):
                 logging.info(f'processing page: {page}')
 
                 try:
-                    page = self.simpleGetRequest(url)
+                    page = self.simple_get_request(url)
                     time.sleep(2)
                     logging.info(f'Scraping text from page {url}')
                     logging.info(page.headers.get("content-type", "unknown"))
-                    self.scrapeText(page, coin)
+                    self.scrape_text(page, coin)
                     time.sleep(2)
                 except Exception as e:
                     pass
@@ -58,15 +63,19 @@ class ScratchScraper:
         self.file.close()
 
     @staticmethod
-    def simpleGetRequest(url: str) -> requests.Response:
+    def simple_get_request(url: str) -> requests.Response:
         """
         Makes a simple get request (fetches a page).
 
-        :param url: url to get request for
-        :type: str
+        Parameters
+        __________
+        url : string
+            Url to get request for.
 
-        :return: page: response from get request
-        :rtype requests.Response
+        Returns
+        _______
+        page : requests response object
+            Response from get request.
         """
         try:
             page = requests.get(url)
@@ -81,15 +90,16 @@ class ScratchScraper:
             raise Exception(f'Error processing url: {url}')
 
 
-    def scrapeText(self, page: requests.Response, text: str):
+    def scrape_text(self, page: requests.Response, text: str) -> None:
         """
         Queries page contents for text substring.
 
-        :param page: page to scrape text for
-        :type: requests.Response
-
-        :param text: text to query page contents for
-        :type: str
+        Parameters
+        __________
+        page : requests response object
+            Page for which to scrape text.
+        text : string
+            Text to query page contents for.
         """
         if text in page.text:
             soup = BeautifulSoup(page.text, 'html.parser')
@@ -99,7 +109,9 @@ class ScratchScraper:
             headers = "Headline, Contents, Link, Date, Source\n"
             self.file.write(headers)
 
-            # TODO: FIXME (needs to be specific to each page as well)
+            # This needs to be specific to each page,
+            # so this needs to be updated before querying a new page.
+            # This should be fixed in the future.
             for j in links:
                 headline = j.find("h6", attrs={'class': 'typography_StyledTypography-owin6q-0 kWutUc'}).text.strip()
                 contents = j.fing("h6", attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block'})
@@ -118,9 +130,13 @@ if __name__ == "__main__":
     directory = 'datasets/news/unprocessed'
 
     cryptocurrencies = ['Bitcoin']
+    # Once the scraping is fixed to be page-specific,
+    # we can uncomment this commented out line of code in place of the line above
     #cryptocurrencies = ['Bitcoin', 'Ethereum', 'Tether', 'USD Coin', 'BNB', 'Binance USD', 'XRP', 'Cardano', 'Solana', 'Dogecoin', 'Polkadot', 'Polygon', 'Dai', 'SHIBA INU', 'TRON']
 
     urls = ["https://www.coindesk.com/newsletters/the-node/"]
+    # Once the scraping is fixed to be page-specific,
+    # we can uncomment this commented out line of code in place of the line above
     #urls = ["https://www.coindesk.com/newsletters/the-node/", "https://bitcoinmagazine.com/articles", "https://cointelegraph.com/tags/bitcoin", "https://cointelegraph.com/tags/ethereum", "https://bitcoinist.com/category/bitcoin/", "https://fintechmagazine.com/articles"]
 
     for coin in cryptocurrencies:

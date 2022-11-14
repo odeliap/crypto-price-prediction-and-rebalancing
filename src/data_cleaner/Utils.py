@@ -16,10 +16,10 @@ logging.basicConfig(level=logging.INFO)
 # ------------- Functions -------------
 
 def clean_data(
-        filepath: str,
-        save_columns: List[str],
-        rename_columns_dict: dict
-):
+    filepath: str,
+    save_columns: List[str],
+    rename_columns_dict: dict
+) -> pd.DataFrame:
     """
     Clean data.
 
@@ -43,7 +43,7 @@ def clean_data(
     return dataframe
 
 
-def clean_hms_timestamps(dataframe: pd.DataFrame):
+def clean_hms_timestamps(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Convert yyyy-mm-dd hh:mm:ss timestamp to yyyy-mm-dd timestamps.
 
@@ -61,7 +61,7 @@ def clean_hms_timestamps(dataframe: pd.DataFrame):
     return dataframe
 
 
-def utc_to_standard_timestamp(dataframe: pd.DataFrame):
+def utc_to_standard_timestamp(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Convert epoch timestamp to yyyy-mm-dd timestamps
 

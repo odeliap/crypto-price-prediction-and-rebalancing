@@ -8,7 +8,7 @@ import math
 
 import pandas as pd
 
-from datetime import datetime, date
+from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 from newsapi import NewsApiClient
@@ -18,23 +18,18 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-API_KEY = '681ea4f3f4de4f29a08687c9f692beed'
+api_key = '681ea4f3f4de4f29a08687c9f692beed'
 
-CATEGORIES = ['business', 'technology']
+categories = ['business', 'technology'] # categories to query
 
-COUNTRY = 'us'
-DATE_FORMAT = '%Y-%m-%d'
-END_DATE = datetime.today().strftime(DATE_FORMAT) # Set scraping end date
-START_DATE = datetime.strptime(END_DATE, DATE_FORMAT) - relativedelta(days=30) # Set scraping start date
-SORT_BY = 'popularity'
-PAGE_SIZE = 100
+country = 'us'
+date_format = '%Y-%m-%d'
+end_date = datetime.today().strftime(date_format) # Set scraping end date
+start_date = datetime.strptime(end_date, date_format) - relativedelta(days=30) # Set scraping start date
+sort_by = 'popularity'
+page_size = 100
 
-COLUMN_NAMES = ['text', 'timestamp']
-
-today = date.today()
-TODAY = today.strftime("%m-%d-%Y")
-
-FILEPATH = f'datasets/news/processed/newsapi_news.csv'
+column_names = ['text', 'timestamp']
 
 # ------------- Class -------------
 
@@ -50,12 +45,14 @@ class NewsApiScraper:
         """
         Instantiate a news api scraper object.
 
-        :param coin: coin to search for news on
-        :type: str
+        Parameters
+        __________
+        coin : string
+            Coin to search for news on.
         """
-        self.newsapi = NewsApiClient(api_key=API_KEY)
+        self.newsapi = NewsApiClient(api_key=api_key)
 
-        self.headlines = pd.DataFrame(columns=COLUMN_NAMES)
+        self.headlines = pd.DataFrame(columns=column_names)
         self.daily_api_requests = 100
 
         self.keywords = coin
@@ -64,57 +61,61 @@ class NewsApiScraper:
 
     def get_all_headlines(self) -> None:
         """
-        Gets all the headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
+        Gets all the headlines across categories of interest.
+        Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_all_headlines()
-        # TODO: FIXME (may require increasing plan)
-        """
-        if headlines is not None:
+        # Below commented out code requires purchasing premium plan
+        # to increase querying limit
+        """if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
                 remaining_pages = self.remaining_pages(total_results)
                 for page in range(2, remaining_pages + 2):
                     if self.daily_api_requests > 0:
                         self.base_get_all_headlines(page)
-                        self.daily_api_requests -= 1
-        """
+                        self.daily_api_requests -= 1"""
 
 
     def get_top_headlines(self) -> None:
         """
-        Gets all top headlines across categories of interest. Results are appended to self.headlines pandas dataframe.
+        Gets all top headlines across categories of interest.
+        Results are appended to self.headlines pandas dataframe.
         """
         headlines = self.base_get_top_headlines()
-        # TODO: FIXME (may require increasing plan)
-        """
-        if headlines is not None:
+        # Below commented out code requires purchasing premium plan
+        # to increase querying limit
+        """if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
                 remaining_pages = self.remaining_pages(total_results)
                 for page in range(2, remaining_pages + 2):
                     if self.daily_api_requests > 0:
                         self.base_get_top_headlines(page)
-                        self.daily_api_requests -= 1
-        """
+                        self.daily_api_requests -= 1"""
 
 
     def base_get_all_headlines(self, page: int = 1) -> dict:
         """
         Send news api get everything request.
 
-        :param page: defaulted to 1
-        :type: int
+        Parameters
+        __________
+        page : int, default 1
+            Current page.
 
-        :return headlines: news api dictionary result
-        :rtype dict
+        Returns
+        _______
+        headlines : dictionary
+            News api result.
         """
         headlines = self.newsapi.get_everything(
             q=self.keywords,
             sources=self.sources,
-            from_param=START_DATE,
-            to=END_DATE,
-            sort_by=SORT_BY,
-            page_size=PAGE_SIZE,
+            from_param=start_date,
+            to=end_date,
+            sort_by=sort_by,
+            page_size=page_size,
             page=page
         )
         self.daily_api_requests = self.daily_api_requests - 1
@@ -127,16 +128,20 @@ class NewsApiScraper:
         """
         Send news api top headlines request.
 
-        :param page: defaulted to 1
-        :type: int
+        Parameters
+        __________
+        page : int, default 1
+            Current page.
 
-        :return headlines: news api dictionary result
-        :rtype dict
+        Results
+        _______
+        headlines : dictionary
+            News api result.
         """
         headlines = self.newsapi.get_top_headlines(
                 q=self.keywords,
                 sources=self.sources,
-                page_size=PAGE_SIZE,
+                page_size=page_size,
                 page=page
             )
         self.daily_api_requests = self.daily_api_requests - 1
@@ -149,15 +154,17 @@ class NewsApiScraper:
         """
         Gets all the sources available across the categories of interest.
 
-        :return sources: all the sources
-        :rtype str
+        Returns
+        _______
+        sources : string
+            All the sources available across the categories of interest.
         """
         combined_sources = []
 
-        for category in CATEGORIES:
+        for category in categories:
             sources_info = self.newsapi.get_sources(
                 category = category,
-                country = COUNTRY
+                country = country
             )
             if sources_info is not None:
                 sources = sources_info.get('sources')
@@ -173,11 +180,13 @@ class NewsApiScraper:
 
     def news_api_dict_to_dataframe(self, dictionary) -> None:
         """
-        Sorts a news api dictionary object to create a pandas dataframe. Adds this dictionary content to
-        self.headlines.
+        Sorts a news api dictionary object to create a pandas dataframe.
+        Adds this dictionary content to self.headlines.
 
-        :param dictionary: news api Python dictionary result.
-        :type: dict
+        Parameters
+        __________
+        dictionary : dictionary
+            News api result.
         """
         logging.info(f'dictionary: {dictionary}')
         articles = dictionary.get('articles')
@@ -198,16 +207,23 @@ class NewsApiScraper:
         """
         Get remaining pages to sort through.
 
-        :param total_results: total results returned from news api query
-        :type: int
+        Parameters
+        __________
+        total_results : int
+            Total number of results returned from news api query.
 
-        :return remaining_pages: remaining pages in query
-        :type: int
+        Returns
+        _______
+        remaining_pages : int
+            Remaining number of pages in the query.
         """
         return math.ceil((total_results - 100)/100)
 
 
 def main(coin: str) -> pd.DataFrame:
+    """
+    Retrieve and return news headlines for coin of interest.
+    """
     scraper = NewsApiScraper(coin)
     scraper.get_all_headlines()
     scraper.get_top_headlines()

@@ -16,7 +16,7 @@ import torch
 from torch.autograd import Variable
 from torch import nn
 
-from src.models.Utils import saveModel, saveScaler, loadModel, loadScaler
+from src.models.Utils import save_model, save_scaler, load_model, load_scaler
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -35,7 +35,7 @@ input_size = 8 # Number of input features
 hidden_size = 2 # Number of features in hidden state
 num_layers = 1 # Number of stacked lstm layers
 
-# Paths for saving models and scalers
+# Paths for saving model and scalers
 modelSavedPath = './outputs/models/SentimentPriceLSTMModel'
 ssScalerSavedPath = './outputs/scalers/SentimentPriceLSTMSsScaler'
 mmScalerSavedPath = './outputs/scalers/SentimentPriceLSTMMmScaler'
@@ -48,7 +48,13 @@ coins = {'bitcoin': [100, 50], 'ethereum': [50, 25], 'solana': [20, 10]} # avail
 
 class EvaluationSentimentPriceLSTM(nn.Module):
 
-    def __init__(self, n_steps_out: int, input_size: int, hidden_size: int, num_layers: int):
+    def __init__(
+        self,
+        n_steps_out: int,
+        input_size: int,
+        hidden_size: int,
+        num_layers: int
+    ) -> None:
         """
         Initialize EvaluationSentimentPriceLSTM
 
@@ -69,8 +75,9 @@ class EvaluationSentimentPriceLSTM(nn.Module):
         self.input_size = input_size  # Set the input size
         self.hidden_size = hidden_size  # Set the number of neurons in each lstm layer
 
+        # Initialize the lstm model
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
-                            num_layers=num_layers, batch_first=True, dropout=0.2) # Initialize the lstm model
+                            num_layers=num_layers, batch_first=True, dropout=0.2)
         # Initialize Linear to make the lstm fully connected
         # with hidden_size number of input features and
         # 128 output features
@@ -84,13 +91,13 @@ class EvaluationSentimentPriceLSTM(nn.Module):
         self.relu = nn.ReLU()
 
 
-    def forward(self, input: np.array):
+    def forward(self, X: np.array) -> torch.Tensor:
         """
         Performs lstm forward pass.
 
         Parameters
         ----------
-        input : numpy array
+        X : numpy array
             Input data.
 
         Returns
@@ -98,19 +105,25 @@ class EvaluationSentimentPriceLSTM(nn.Module):
         Tensor
             Output tensor.
         """
-        h_0 = Variable(torch.zeros(self.num_layers, input.size(0), self.hidden_size)) # Hidden state
-        c_0 = Variable(torch.zeros(self.num_layers, input.size(0), self.hidden_size)) # Cell state
-        # propagate input through lstm
-        output, (hn, cn) = self.lstm(input, (h_0, c_0))  # Get output, hidden, and cell state at next step
+        h_0 = Variable(torch.zeros(self.num_layers, X.size(0), self.hidden_size)) # Hidden state
+        c_0 = Variable(torch.zeros(self.num_layers, X.size(0), self.hidden_size)) # Cell state
+
+        # Propagate input through lstm
+        output, (hn, cn) = self.lstm(X, (h_0, c_0))  # Get output, hidden, and cell state at next step
         hn = hn.view(-1, self.hidden_size)  # Reshape the hidden state at next step for dense layer
-        out = self.relu(hn) # Apply the rectified linear unit function element-wise
-        out = self.fc_1(out) # Get first dense layer
-        out = self.relu(out) # Apply the rectified linear unit function element-wise
-        out = self.fc_2(out) # Get the final output by fully connecting the last layer
+        out = self.relu(hn)   # Apply the rectified linear unit function element-wise
+        out = self.fc_1(out)  # Get first dense layer
+        out = self.relu(out)  # Apply the rectified linear unit function element-wise
+        out = self.fc_2(out)  # Get the final output by fully connecting the last layer
         return out
 
 
-def split_sequences(input_sequences: np.ndarray, output_sequence: np.ndarray, n_steps_in: int, n_steps_out: int):
+def split_sequences(
+    input_sequences: np.ndarray,
+    output_sequence: np.ndarray,
+    n_steps_in: int,
+    n_steps_out: int
+) -> (np.array, np.array):
     """
     Split multivariate sequence into past and future samples (X and y parts).
 
@@ -132,7 +145,7 @@ def split_sequences(input_sequences: np.ndarray, output_sequence: np.ndarray, n_
     y_arr
         Numpy array of y (output) data
     """
-    X, y = list(), list() # instantiate X and y lists
+    X, y = list(), list() # Instantiate X and y lists
     # Loop over the length of the input sequences
     for i in range(len(input_sequences)):
         # Find the end of the input, output sequence
@@ -149,14 +162,15 @@ def split_sequences(input_sequences: np.ndarray, output_sequence: np.ndarray, n_
 
 
 def training_loop(
-        n_epochs: int,
-        lstm: EvaluationSentimentPriceLSTM,
-        optimiser: torch.optim.Adam,
-        loss_fn: torch.nn.MSELoss,
-        X_train: torch.Tensor,
-        y_train: torch.Tensor,
-        X_test: torch.Tensor,
-        y_test: torch.Tensor):
+    n_epochs: int,
+    lstm: EvaluationSentimentPriceLSTM,
+    optimiser: torch.optim.Adam,
+    loss_fn: torch.nn.MSELoss,
+    X_train: torch.Tensor,
+    y_train: torch.Tensor,
+    X_test: torch.Tensor,
+    y_test: torch.Tensor
+) -> None:
     """
     Train the lstm model.
 
@@ -196,7 +210,7 @@ def training_loop(
                                                                       loss.item(),
                                                                       test_loss.item()))
 
-def predict(input, coin, n_steps_in):
+def predict(input: torch.Tensor, coin: str, n_steps_in: int) -> np.ndarray:
     """
     Make predictions.
 
@@ -214,9 +228,9 @@ def predict(input, coin, n_steps_in):
     predictions : ndarray
         Output predictions
     """
-    lstm = loadModel(f'{modelSavedPath}_{coin}.sav') # load the lstm model
-    ss = loadScaler(f'{ssScalerSavedPath}_{coin}.pkl') # load the ss scaler
-    mm = loadScaler(f'{mmScalerSavedPath}_{coin}.pkl') # load the mm scaler
+    lstm = load_model(f'{modelSavedPath}_{coin}.sav') # load the lstm model
+    ss = load_scaler(f'{ssScalerSavedPath}_{coin}.pkl') # load the ss scaler
+    mm = load_scaler(f'{mmScalerSavedPath}_{coin}.pkl') # load the mm scaler
 
     X_trans = ss.fit_transform(input) # transformed input data
     X_tensors = Variable(torch.Tensor(X_trans))
@@ -228,7 +242,7 @@ def predict(input, coin, n_steps_in):
     return predictions
 
 
-def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int):
+def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int) -> None:
     """
     Create lstm model, train it, and show evaluation of its performance
 
@@ -271,14 +285,12 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int):
     # Get the train and test data
     X_train = X_ss[:train_test_cutoff]
     X_test = X_ss[train_test_cutoff:]
-
     y_train = y_mm[:train_test_cutoff]
     y_test = y_mm[train_test_cutoff:]
 
     # Convert the training and testing data to pytorch tensors
     X_train_tensors = Variable(torch.Tensor(X_train))
     X_test_tensors = Variable(torch.Tensor(X_test))
-
     y_train_tensors = Variable(torch.Tensor(y_train))
     y_test_tensors = Variable(torch.Tensor(y_test))
 
@@ -306,8 +318,8 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int):
                   X_test=X_test_tensors_final,
                   y_test=y_test_tensors)
 
-    # Save the lstm model
-    saveModel(lstm, f'{modelSavedPath}_{coin}.sav')
+    # Save the trained lstm model
+    save_model(lstm, f'{modelSavedPath}_{coin}.sav')
 
     # Get the old transformers
     df_X_ss = ss.transform(df.drop(columns=['open']))  # old transformers
@@ -385,8 +397,8 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int):
     plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_static_sentiment_one_shot_multi_step_prediction_{coin}.png", dpi=300)
     plt.show()
 
-    saveScaler(mm, f'{ssScalerSavedPath}_{coin}.pkl')
-    saveScaler(ss, f'{mmScalerSavedPath}_{coin}.pkl')
+    save_scaler(mm, f'{ssScalerSavedPath}_{coin}.pkl')
+    save_scaler(ss, f'{mmScalerSavedPath}_{coin}.pkl')
 
 
 if __name__ == "__main__":

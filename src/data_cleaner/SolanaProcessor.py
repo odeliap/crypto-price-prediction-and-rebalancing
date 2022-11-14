@@ -21,7 +21,9 @@ price_filepath = 'datasets/price/solana/solana_price.csv'
 # ------------- Class -------------
 class SolanaProcessor:
 
-    def __init__(self):
+    def __init__(
+        self
+    ) -> None:
         """
         Initialize SolanaProcessor
         """
@@ -43,7 +45,7 @@ class SolanaProcessor:
         )
 
 
-    def combine_dataframes(self):
+    def combine_dataframes(self) -> pd.DataFrame:
         """
         Combine news and price dataframes into cohesive dataframe.
 
