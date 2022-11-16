@@ -21,58 +21,68 @@ cryptocurrencies from Kaggle. I pulled the following datasets for inclusion in m
 Price Datasets
 ~~~~~~~~~~~~~~~
 
-* `Cryptocurrency Historical Prices`_
-
-* `TOP 50 Cryptocurrencies Historical Prices`_
-
-* `Top 100 Cryptocurrencies Historical Dataset`_
-
-* `Cryptoindex.com 100`_
-
+* `Bitcoin Price`_
+* `Ethereum Price 1`_
+* `Ethereum Price 2`_
+* `Solana Price`_
 
 News Datasets
 ~~~~~~~~~~~~~~
 
-* `Bitcoin Sentiment Analysis`_
+* `Bitcoin News 1`_
+* `Bitcoin News 2`_
+* `Ethereum News`_
+* `Solana News`_
 
-* `News about major cryptocurrencies 2013-2018 (40k)`_
-
-* `Cryptocurrency News Tweet`_
-
-Most of these datasets are found and stored in this project under the root **datasets** folder.
-
-Note: the **OpenBlender** datasets I had to pull from their API, so these datasets are stored under
-*src/scraper/datasets*. Additionally, the **Cryptoindex.com 100** dataset was not used for sentiment analysis or
-model training but is used for the evalution of this project's index fund to compare against a known index fund's
-performance.
+These raw datasets are found and stored in this project under the **src/data_cleaner/datasets** folder.
 
 
 .. _creatingdatasets:
 
-Creating Datasets
-------------------
+Scraping Data and Sourcing with APIs
+------------------------------------
 
 After sourcing datasets for this project, I was still missing crucial data for the sentiment analysis and machine
-learning aspects of this project. So, I collected my own data and then joined it with the sourced data to create fully
-viable datasets.
+learning aspects of this project. So, I attempted to use existing APIs to collect more data. This was largely
+unsuccessful since the APIs have limits on querying. The classes built out to attempt to get more data are found under
+the **scr/scraper** package. In the future, these could be used to source more data if someone is willing to pay for
+premium subscription plans and/or individually sort through the html for different cryptocurrency blogs to scrape news
+from these directly using the **ScratchScraper** class included.
 
-To create my own datasets, I used the scraping APIs from:
+I used the scraping APIs from:
 
 * `News API`_; and
 * `Crypto News API`_.
 
-I needed to supplement both the crypto prices and crypto news datasets. The news APIs only had access to news data, so
-used those to scrape news data.
+The news APIs only had access to news data, so I built these to scrape news data.
+
+I also included an **OpenBlender** class to pull from their API to retrieve found datasets. If you run this class,
+these datasets will get stored under *src/scraper/datasets* as well.
+
+Note: None of the datasets from these APIs and scraper(s) were used to build the datasets used in this project.
+However, the **NewsApiScraper** is used as part of the end-to-end pipeline to get news data for predicting near future
+prices.
+
+Cleaning the Datasets
+---------------------
+
+With the price and news datasets found on Kaggle, I proceeded to make a clean, cohesive dataset for each coin. To do so,
+I cleaned all the timestamps to a uniform standard, joined all the news headlines, grouping them by timestamp, and
+removed all rows with empty entries. A class was made for each coin to perform this cleaning, which all utilize a common
+**Utils** class. These coin-specific classes and this **Utils** class are found under **src/data_cleaner**.
+
+The output from this cleaning step is stored under **src/data_cleaner/outputs**.
 
 
+.. _Bitcoin News 1: https://www.kaggle.com/datasets/c5e1371384af39901791384a29d20195e0e3d4068b68fb1b12d58caf5a76ff33?select=bitcoin_news_coin_telegraph0.csv
+.. _Bitcoin News 2: https://www.kaggle.com/muhammedabdulazeem/bitcoin-price-prediction
+.. _Ethereum News: https://www.kaggle.com/datasets/mathurinache/ethereum-tweets
+.. _Solana News: https://www.kaggle.com/datasets/aglitoiumarius/rsolana-comments-202001202204
 
-.. _Bitcoin Sentiment Analysis: https://www.kaggle.com/code/codeblogger/bitcoin-sentiment-analysis/data
-.. _Cryptocurrency Historical Prices: https://www.kaggle.com/datasets/sudalairajkumar/cryptocurrencypricehistory?resource=download
-.. _TOP 50 Cryptocurrencies Historical Prices: https://www.kaggle.com/datasets/odins0n/top-50-cryptocurrency-historical-prices
-.. _Top 100 Cryptocurrencies Historical Dataset: https://www.kaggle.com/datasets/kaushiksuresh147/top-10-cryptocurrencies-historical-dataset
-.. _News about major cryptocurrencies 2013-2018 (40k): https://www.kaggle.com/datasets/kashnitsky/news-about-major-cryptocurrencies-20132018-40k
+.. _Bitcoin Price: https://www.kaggle.com/datasets/mczielinski/bitcoin-historical-data
+.. _Ethereum Price 1: https://www.kaggle.com/datasets/ranugadisansagamage/ethereum-crypto-price
+.. _Ethereum Price 2: https://www.kaggle.com/datasets/psycon/ethusdt-2017-to-2022
+.. _Solana Price: https://www.kaggle.com/datasets/varpit94/solana-data
 
 .. _News API: https://newsapi.org
 .. _Crypto News API: https://cryptonews-api.com
-.. _Cryptoindex.com 100: https://openblender.io/#/search
-.. _Cryptocurrency News Tweet: https://openblender.io/#/search

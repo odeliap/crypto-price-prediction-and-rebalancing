@@ -20,6 +20,13 @@ If you are completely new, see the :ref:`installation and setup <settingup>` for
    :caption: Project Process
 
    datasets
+   pipeline
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Code Documentation
+
+   pricelstmmodel
 
 
 
