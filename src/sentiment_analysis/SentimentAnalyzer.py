@@ -180,5 +180,5 @@ if __name__ == "__main__":
         output_filepath = f'outputs/{output_filename}'
         dataframe = pd.read_csv(file)
         analyzer = SentimentAnalyzer(dataframe)
-        analyzer.dataframe.to_csv(output_filepath)
+        analyzer.dataframe.to_csv(output_filepath, index=False)
         logging.info(f'finished processing {file}')

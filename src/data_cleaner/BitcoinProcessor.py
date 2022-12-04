@@ -111,4 +111,4 @@ if __name__ == "__main__":
     """
     processor = BitcoinProcessor()
     dataframe = processor.combine_dataframes_with_transform(processor.dataframes)
-    dataframe.to_csv('outputs/bitcoin_dataset.csv', index=None)
+    dataframe.to_csv('outputs/bitcoin_dataset.csv', index=False)

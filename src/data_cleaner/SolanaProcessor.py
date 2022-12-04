@@ -74,4 +74,4 @@ if __name__ == "__main__":
     """
     processor = SolanaProcessor()
     dataframe = processor.combine_dataframes()
-    dataframe.to_csv('outputs/solana_dataset.csv', index=None)
+    dataframe.to_csv('outputs/solana_dataset.csv', index=False)
