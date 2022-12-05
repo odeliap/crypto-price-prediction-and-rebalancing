@@ -18,7 +18,8 @@ import torch
 from torch.autograd import Variable
 from torch import nn
 
-from Utils import save_model, save_scaler, load_model, load_scaler
+from src.models.Utils import save_model, save_scaler
+from src.models.Unpickler import load_object
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -28,8 +29,6 @@ warnings.filterwarnings('ignore')
 
 # ------------- Constants -------------
 
-train_test_split = 0.90 # Fractional split between training and testing
-
 n_epochs = 1000 # Number of epochs for training
 learning_rate = 0.001 # Learning rate for training
 
@@ -38,13 +37,17 @@ hidden_size = 2 # Number of features in hidden state
 num_layers = 1 # Number of stacked lstm layers
 
 # Paths for saving model and scalers
-modelSavedPath = './outputs/models/SentimentPriceLSTMModel'
-ssScalerSavedPath = './outputs/scalers/SentimentPriceLSTMSsScaler'
-mmScalerSavedPath = './outputs/scalers/SentimentPriceLSTMMmScaler'
+modelSavedPath = f'outputs/models/SentimentPriceLSTMModel'
+ssScalerSavedPath = f'outputs/scalers/SentimentPriceLSTMSsScaler'
+mmScalerSavedPath = f'outputs/scalers/SentimentPriceLSTMMmScaler'
+
 
 plot_style = 'seaborn-v0_8-pastel' # Plot style
 
-coins = {'bitcoin': [100, 50], 'ethereum': [50, 25], 'solana': [20, 10]} # available coins
+n_steps_in = 30
+n_steps_out = 15
+
+coins = {'bitcoin': 0.95, 'ethereum': 0.90, 'solana': 0.70} # available coins to number of input/output steps
 
 # ------------- Class -------------
 
@@ -209,32 +212,49 @@ def training_loop(
                                                                       loss.item(),
                                                                       test_loss.item()))
 
-def predict(input: torch.Tensor, coin: str, n_steps_in: int) -> np.ndarray:
+def predict(
+    X: pd.DataFrame,
+    y: np.array,
+    coin: str,
+    n_steps_in: int,
+    model_saved_path: str,
+    ss_scaler_saved_path: str,
+    mm_scaler_saved_path: str
+) -> np.ndarray:
     """
     Make predictions.
 
     Parameters
     ----------
-    input : Tensor
+    X : pandas dataframe
         Input data.
+    y : numpy array
+        corresponding open prices for those dates.
     coin : string
         Coin of interest.
     n_steps_in : int
         Number of input steps for prediction.
+    model_saved_path : string
+        Path to saved model.
+    ss_scaler_saved_path : string
+        Path to saved ss scaler.
+    mm_scaler_saved_path : string
+        Path to saved mm scaler.
 
     Returns
     -------
     predictions : ndarray
         Output predictions
     """
-    lstm = load_model(f'{modelSavedPath}_{coin}.sav') # load the lstm model
-    ss = load_scaler(f'{ssScalerSavedPath}_{coin}.pkl') # load the ss scaler
-    mm = load_scaler(f'{mmScalerSavedPath}_{coin}.pkl') # load the mm scaler
+    lstm = load_object(f'{model_saved_path}_{coin}.sav') # load the lstm model
+    ss = load_object(f'{ss_scaler_saved_path}_{coin}.pkl') # load the ss scaler
+    mm = load_object(f'{mm_scaler_saved_path}_{coin}.pkl') # load the mm scaler
 
-    X_trans = ss.fit_transform(input) # transformed input data
-
-    X_tensors = Variable(torch.Tensor(X_trans))
-
+    X_trans = ss.fit_transform(X) # transformed input data
+    y_trans = mm.fit_transform(y.reshape(-1, 1)) # transformed open prices
+    X_ss, y_ss = split_sequences(X_trans, y_trans, n_steps_in, n_steps_out)
+    X_tensors = Variable(torch.Tensor(X_ss))
+    print(torch.Tensor(X_trans).size())
     X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], n_steps_in, X_tensors.shape[2])) # reshape the transformed variable input data
 
     train_predict = lstm(X_train_tensors_final)  # perform forward pass
@@ -264,7 +284,7 @@ def plot_price_over_time(coin: str, dataframe: pd.DataFrame) -> None:
     plt.show()
 
 
-def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int) -> None:
+def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int, train_test_split) -> None:
     """
     Create lstm model, train it, and show evaluation of its performance
 
@@ -432,6 +452,5 @@ if __name__ == "__main__":
     """
     for coin in coins.keys():
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
-        n_steps_in = coins.get(coin)[0]
-        n_steps_out = coins.get(coin)[1]
-        main(coin, filepath, n_steps_in, n_steps_out)
+        train_test_split = coins[coin]
+        main(coin, filepath, n_steps_in, n_steps_out, train_test_split)

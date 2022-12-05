@@ -58,10 +58,19 @@ in the command above. This should open the documentation in this browser.
 
 ## Run Streamlit App
 
-To run the streamlit app, type in the terminal at the root of this project
+Prior to running the streamlit app, we need to export the path to this project. Once you have the path to this project, 
+execute the following export in the terminal
+
+```
+export PYTHONPATH="${PYTHONPATH}:/path/to/this/project/"
+```
+
+where ```path/to/this/project``` is replaced with the actual path.
+
+Next, in the terminal at the root of this project execute
 
 ```commandline
-streamlit run src/app.py
+streamlit run src/pipeline/app.py
 ```
 
 The terminal will display a `localhost` link from this command. Press this link and open the page or copy-paste the 

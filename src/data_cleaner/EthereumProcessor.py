@@ -82,4 +82,4 @@ if __name__ == "__main__":
     """
     processor = EthereumProcessor()
     dataframe = processor.combine_dataframes()
-    dataframe.to_csv('outputs/ethereum_dataset.csv', index=None)
+    dataframe.to_csv('outputs/ethereum_dataset.csv', index=False)

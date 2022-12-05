@@ -15,12 +15,12 @@ https://github.com/odeliap/crypto-price-prediction-and-rebalancing
 Setting up the Virtual Environment
 -----------------------------------
 
-This project utilizes python version 3.9.7, but it should be compatible with other versions of python3. To set this
-version, I used ``pyenv`` (common python version management tool). To install ``pyenv``, follow the directions at the
-`pyenv repository`_::
+This project utilizes python version 3.9.12, but it should be compatible with other versions of python3 except version
+3.9.7 which has a recorded bug for the streamlit app. To set this version, I used ``pyenv`` (common python version
+management tool). To install ``pyenv``, follow the directions at the `pyenv repository`_::
 
-    pyenv install 3.9.7
-    pyenv local 3.9.7
+    pyenv install 3.9.12
+    pyenv local 3.9.12
 
 This project uses ``venv`` for the virtual environment and install the necessary libraries::
 

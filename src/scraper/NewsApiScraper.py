@@ -9,7 +9,6 @@ import math
 import pandas as pd
 
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
 
 from newsapi import NewsApiClient
 
@@ -24,8 +23,8 @@ categories = ['business', 'technology'] # categories to query
 
 country = 'us'
 date_format = '%Y-%m-%d'
-end_date = datetime.today().strftime(date_format) # Set scraping end date
-start_date = datetime.strptime(end_date, date_format) - relativedelta(days=30) # Set scraping start date
+#end_date = datetime.today().strftime(date_format) # Set scraping end date
+#start_date = datetime.strptime(end_date, date_format) - relativedelta(days=30) # Set scraping start date
 sort_by = 'popularity'
 page_size = 100
 
@@ -40,7 +39,9 @@ class NewsApiScraper:
 
     def __init__(
         self,
-        coin: str
+        coin: str,
+        start_date: datetime,
+        end_date: datetime
     ) -> None:
         """
         Instantiate a news api scraper object.
@@ -49,6 +50,10 @@ class NewsApiScraper:
         __________
         coin : string
             Coin to search for news on.
+        start_date : datetime
+            Date to begin scraping news from.
+        end_date : datetime
+            Date to stop scraping news on.
         """
         self.newsapi = NewsApiClient(api_key=api_key)
 
@@ -57,6 +62,9 @@ class NewsApiScraper:
 
         self.keywords = coin
         self.sources = self.get_all_sources()
+
+        self.start_date = start_date
+        self.end_date = end_date
 
 
     def get_all_headlines(self) -> None:
@@ -112,8 +120,8 @@ class NewsApiScraper:
         headlines = self.newsapi.get_everything(
             q=self.keywords,
             sources=self.sources,
-            from_param=start_date,
-            to=end_date,
+            from_param=self.start_date,
+            to=self.end_date,
             sort_by=sort_by,
             page_size=page_size,
             page=page
@@ -220,11 +228,26 @@ class NewsApiScraper:
         return math.ceil((total_results - 100)/100)
 
 
-def main(coin: str) -> pd.DataFrame:
+def main(coin: str, start_date: datetime, end_date: datetime) -> pd.DataFrame:
     """
     Retrieve and return news headlines for coin of interest.
+
+    Parameters
+    __________
+    coin : string
+        Coin to search for news on.
+    start_date : datetime
+        Date to begin scraping news from.
+    end_date : datetime
+        Date to stop scraping news on.
+
+    Returns
+    _______
+    headlines : pandas dataframe
+        News headlines for the given coin.
     """
-    scraper = NewsApiScraper(coin)
+    scraper = NewsApiScraper(coin, start_date, end_date)
     scraper.get_all_headlines()
     scraper.get_top_headlines()
-    return scraper.headlines
+    headlines = scraper.headlines
+    return headlines

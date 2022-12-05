@@ -17,7 +17,7 @@ from tensorflow import keras
 from keras.layers import Bidirectional, LSTM, Dropout, Dense, Activation
 from sklearn.preprocessing import MinMaxScaler
 
-from Utils import converge_prices, save_model, save_scaler, load_model, load_scaler, generate_comparison_graph
+from Utils import converge_prices, save_model, save_scaler, generate_comparison_graph
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -205,8 +205,8 @@ def predict(X: np.array, coin: str) -> np.array:
         Predicted future prices.
     """
     # Load model and scaler from saved paths
-    model = load_model(f'{modelSavedPath}_{coin}.sav')
-    scaler = load_scaler(f'{scalerSavedPath}_{coin}.pkl')
+    model = load_object(f'{modelSavedPath}_{coin}.sav')
+    scaler = load_object(f'{scalerSavedPath}_{coin}.pkl')
 
     scaled_predictions = model.predict(X) # Predict scaled prices
     predictions = scaler.inverse_transform(scaled_predictions) # Transform scaled predictions to actual prices
