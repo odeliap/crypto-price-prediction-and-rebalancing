@@ -39,7 +39,8 @@ comparison_fund_name = 'BITW'
 
 # ------------ Logic ------------
 
-def portfolio(data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFrame:
+
+def portfolio(data: pd.DataFrame, n_stocks: int, n_review: int) -> pd.DataFrame:
     """
     Create a portfolio.
 
@@ -47,9 +48,9 @@ def portfolio(data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFr
     ----------
     data : pandas dataframe
         Dataset of coins to corresponding stock price (USD) indexed by date.
-    num_stocks : int
+    n_stocks : int
         Number of stocks to have in the fund.
-    num_review : int
+    n_review : int
         Number of "bad stocks" to remove
 
     Returns
@@ -64,28 +65,29 @@ def portfolio(data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFr
     for i in range(len(dataframe)):
         if len(selected_stocks) > 0:
             average_monthly_return.append(dataframe[selected_stocks].iloc[i, :].mean())
-            bad_stocks = dataframe[selected_stocks].iloc[i, :].sort_values(ascending=True)[:num_review].index.values.tolist()
+            bad_stocks = dataframe[selected_stocks].iloc[i, :].sort_values(ascending=True)[:n_review]\
+                .index.values.tolist()
             selected_stocks = [t for t in selected_stocks if t not in bad_stocks]
-        fill = num_stocks - len(selected_stocks)
+        fill = n_stocks - len(selected_stocks)
         new_picks = dataframe.iloc[i, :].sort_values(ascending=False)[:fill].index.values.tolist()
         selected_stocks = selected_stocks + new_picks
     return_dataframe = pd.DataFrame(np.array(average_monthly_return), columns=["monthly_returns"])
     return return_dataframe
 
 
-def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFrame:
+def main(stock_prices: pd.DataFrame, n_stocks: int, n_review: int) -> pd.DataFrame:
     """
     Create balanced portfolio.
 
     Parameters
     ----------
-    stock_data : pandas dataframe
+    stock_prices : pandas dataframe
         Input dataframe with stock data.
         Must be indexed on date and have columns of
         coin names corresponding to stock price in USD.
-    num_stocks : int
+    n_stocks : int
         Number of stocks to have in the fund.
-    num_review : int
+    n_review : int
         Number of "bad stocks" to remove
 
     Returns
@@ -96,12 +98,12 @@ def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataF
     stock_returns = pd.DataFrame()
 
     for coin in coins:
-        stock_returns[coin] = stock_data['Adj Close'][coin].pct_change()
+        stock_returns[coin] = stock_prices['Adj Close'][coin].pct_change()
 
     stock_returns = stock_returns.dropna()
 
-    rebalanced_portfolio = portfolio(stock_returns, num_stocks, num_review)
-    return rebalanced_portfolio
+    balanced_portfolio = portfolio(stock_returns, n_stocks, n_review)
+    return balanced_portfolio
 
 
 if __name__ == "__main__":
@@ -114,7 +116,7 @@ if __name__ == "__main__":
     comparison_fund["monthly_returns"] = comparison_fund["Adj Close"].pct_change().fillna(0)
 
     # Download stock data for available coins
-    stock_data = yf.download(coins,start=start_date, end=end_date,interval='1d')
+    stock_data = yf.download(coins, start=start_date, end=end_date, interval='1d')
     stock_data = stock_data.dropna()
 
     # Get rebalanced portfolio for coins' stock data

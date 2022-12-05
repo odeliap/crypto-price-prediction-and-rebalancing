@@ -16,16 +16,16 @@ import pickle
 # ----------- Functions -----------
 
 def data_split(
-    X: np.array,
+    x: np.array,
     y: np.array,
-    split = 0.2
+    split=0.2
 ) -> (np.array, np.array, np.array, np.array):
     """
     Use train_test_split from sklearn to split data into training and validation sets.
 
     Parameters
     __________
-    X : array
+    x : array
         Input data.
     y : array
         Corresponding output data.
@@ -43,14 +43,14 @@ def data_split(
     y_test : array
         Testing output data.
     """
-    x_train, x_test, y_train, y_test = train_test_split(X, y, test_size = split, random_state = 0)
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=split, random_state=0)
     return x_train, x_test, y_train, y_test
 
 
 def converge_prices(
     dataframe: pd.DataFrame,
     price_label: str,
-    scaler = MinMaxScaler()
+    scaler=MinMaxScaler()
 ) -> np.ndarray:
     """
     Converge prices to values between 0 and 1.
@@ -69,12 +69,13 @@ def converge_prices(
     scaled_close : 2d array-like
         Cleaned price label column (reshaped to have shape (x, y))
     """
-    close_price = dataframe[price_label].values.reshape(-1, 1) # scaler expects data is shaped as (x, y) so we add dummy dimension
+    # scaler expects data is shaped as (x, y) so we add dummy dimension
+    close_price = dataframe[price_label].values.reshape(-1, 1)
 
     scaled_close = scaler.fit_transform(close_price)
 
-    scaled_close = scaled_close[~np.isnan(scaled_close)] # remove all nan values
-    scaled_close = scaled_close.reshape(-1, 1) # reshape after removing nans
+    scaled_close = scaled_close[~np.isnan(scaled_close)]  # remove all nan values
+    scaled_close = scaled_close.reshape(-1, 1)  # reshape after removing nans
 
     return scaled_close
 

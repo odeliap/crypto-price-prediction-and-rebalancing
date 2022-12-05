@@ -35,6 +35,7 @@ language = "en"
 
 # ------------- Class -------------
 
+
 class CryptoNewsApiScraper:
     """
     Class to scrape news using python crypto news API
@@ -46,12 +47,11 @@ class CryptoNewsApiScraper:
         """
         Instantiate a crypto news api scraper object.
         """
-        self.newsapi = CryptoControlAPI(apiKey=news_api_key) # Connect to the CrytpoControl API
+        self.newsapi = CryptoControlAPI(apiKey=news_api_key)  # Connect to the CrytpoControl API
 
         self.headlines = pd.DataFrame(columns=column_names)
 
         self.coin_ids = self.get_all_crypto_coin_ids()
-
 
     def get_top_news(self) -> None:
         """
@@ -64,7 +64,6 @@ class CryptoNewsApiScraper:
         tickers = ','.join(data['tickers'])
         row = {'title': title, 'text': text, 'timestamp': timestamp, 'coin': tickers}
         self.headlines = self.headlines.append(row)
-
 
     def get_top_news_by_coin(self) -> None:
         """
@@ -79,7 +78,6 @@ class CryptoNewsApiScraper:
             row = {'title': title, 'text': text, 'timestamp': timestamp, 'coin': slug}
             self.headlines = self.headlines.append(row)
 
-
     @staticmethod
     def get_all_crypto_coin_ids() -> pd.DataFrame:
         """
@@ -92,9 +90,9 @@ class CryptoNewsApiScraper:
         """
         coin_ids = pd.DataFrame(columns=coin_id_map_col_names)
 
-        url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/map' # Coinmarketcap API url for getting cryptocurrency mapping of name to id
-
-        parameters = { 'limit': '50', 'sort': 'cmc_rank' }
+        # Coinmarketcap API url for getting cryptocurrency mapping of name to id
+        url = 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/map'
+        parameters = {'limit': '50', 'sort': 'cmc_rank'}
 
         headers = {
             'Accepts': 'application/json',

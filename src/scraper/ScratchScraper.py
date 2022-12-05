@@ -10,7 +10,8 @@ https://towardsdatascience.com/web-scraping-news-articles-in-python-9dd605799558
 import logging
 
 from bs4 import BeautifulSoup
-import sys, time
+import sys
+import time
 import requests
 
 from typing import List
@@ -29,7 +30,7 @@ class ScratchScraper:
         self,
         urls: List[str],
         filename: str,
-        coin: str
+        coin_name: str
     ) -> None:
         """
         Initialize Scraper object.
@@ -40,11 +41,11 @@ class ScratchScraper:
             Urls to scrape data from.
         filename : string
             File name to save scraped data to.
-        coin : string
+        coin_name : string
             Coin for which to scrape data.
         """
         self.upperframe = []
-        self.file = open(filename, "w", encoding = 'utf-8')
+        self.file = open(filename, "w", encoding='utf-8')
 
         for url in urls:
             for page in range(1, pages_to_get+1):
@@ -55,7 +56,7 @@ class ScratchScraper:
                     time.sleep(2)
                     logging.info(f'Scraping text from page {url}')
                     logging.info(page.headers.get("content-type", "unknown"))
-                    self.scrape_text(page, coin)
+                    self.scrape_text(page, coin_name)
                     time.sleep(2)
                 except Exception as e:
                     pass
@@ -89,7 +90,6 @@ class ScratchScraper:
             logging.info(f'{error_type}, line: {error_info.tb_lineno}')
             raise Exception(f'Error processing url: {url}')
 
-
     def scrape_text(self, page: requests.Response, text: str) -> None:
         """
         Queries page contents for text substring.
@@ -104,7 +104,10 @@ class ScratchScraper:
         if text in page.text:
             soup = BeautifulSoup(page.text, 'html.parser')
             frame = []
-            links = soup.findAll('div', attrs={'class':'newsletters-individualstyles__ArticleWrapper-sc-160pv05-1 ehdCdZ'})
+            links = soup.findAll(
+                'div',
+                attrs={'class': 'newsletters-individualstyles__ArticleWrapper-sc-160pv05-1 ehdCdZ'}
+            )
             logging.info(f'length of links: {len(links)}')
             headers = "Headline, Contents, Link, Date, Source\n"
             self.file.write(headers)
@@ -114,15 +117,26 @@ class ScratchScraper:
             # This should be fixed in the future.
             for j in links:
                 headline = j.find("h6", attrs={'class': 'typography_StyledTypography-owin6q-0 kWutUc'}).text.strip()
-                contents = j.fing("h6", attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block'})
+                contents = j.fing(
+                    "h6",
+                    attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block'}
+                )
                 print(contents)
                 link = page.url
-                link += j.find("div", attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block '}).find('a')['href'].strip()
-                date = j.find('div', attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block ac-publishing-date'}).find('footer').text[-14:-1].strip()
+                link += j.find(
+                    "div",
+                    attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block '}
+                ).find('a')['href'].strip()
+                date = j.find(
+                    'div',
+                    attrs={'class': 'display-desktop-block display-tablet-block display-mobile-block ac-publishing-date'
+                           }
+                ).find('footer').text[-14:-1].strip()
                 source = page.url
                 frame.append((headline, link, date, source))
                 self.file.write(
-                    headline.replace(",", "^") + "," + contents.replace(",", "^") + "," + link + "," + date.replace(",", "^") + "," + source.replace(",", "^"))
+                    headline.replace(",", "^") + "," + contents.replace(",", "^") + "," + link + "," +
+                    date.replace(",", "^") + "," + source.replace(",", "^"))
             self.upperframe.extend(frame)
 
 
@@ -132,13 +146,16 @@ if __name__ == "__main__":
     cryptocurrencies = ['Bitcoin']
     # Once the scraping is fixed to be page-specific,
     # we can uncomment this commented out line of code in place of the line above
-    #cryptocurrencies = ['Bitcoin', 'Ethereum', 'Tether', 'USD Coin', 'BNB', 'Binance USD', 'XRP', 'Cardano', 'Solana', 'Dogecoin', 'Polkadot', 'Polygon', 'Dai', 'SHIBA INU', 'TRON']
+    # cryptocurrencies = ['Bitcoin', 'Ethereum', 'Tether', 'USD Coin', 'BNB', 'Binance USD', 'XRP', 'Cardano', 'Solana',
+    #                    'Dogecoin', 'Polkadot', 'Polygon', 'Dai', 'SHIBA INU', 'TRON']
 
-    urls = ["https://www.coindesk.com/newsletters/the-node/"]
+    scraping_urls = ["https://www.coindesk.com/newsletters/the-node/"]
     # Once the scraping is fixed to be page-specific,
     # we can uncomment this commented out line of code in place of the line above
-    #urls = ["https://www.coindesk.com/newsletters/the-node/", "https://bitcoinmagazine.com/articles", "https://cointelegraph.com/tags/bitcoin", "https://cointelegraph.com/tags/ethereum", "https://bitcoinist.com/category/bitcoin/", "https://fintechmagazine.com/articles"]
+    # scraping_urls = ["https://www.coindesk.com/newsletters/the-node/", "https://bitcoinmagazine.com/articles",
+    #                 "https://cointelegraph.com/tags/bitcoin", "https://cointelegraph.com/tags/ethereum",
+    #                 "https://bitcoinist.com/category/bitcoin/", "https://fintechmagazine.com/articles"]
 
     for coin in cryptocurrencies:
-        filename = f'{coin.lower()}_scraped_news.csv'
-        scraper = ScratchScraper(urls, f'{directory}/{filename}', coin)
+        scraping_filename = f'{coin.lower()}_scraped_news.csv'
+        scraper = ScratchScraper(scraping_urls, f'{directory}/{scraping_filename}', coin)

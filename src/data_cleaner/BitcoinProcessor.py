@@ -33,14 +33,21 @@ class BitcoinProcessor:
         Initialize BitcoinProcessor
         """
         # Clean the datasets
-        news_dataframe = clean_data(filepath = news_filepath, save_columns = ['timestamp', 'text'], rename_columns_dict = {'Date': 'timestamp', 'Title': 'text'})
-        price_dataframe = clean_data(filepath = price_filepath, save_columns = ['timestamp', 'open', 'high', 'low'], rename_columns_dict = {'Date': 'timestamp', 'High': 'high', 'Low': 'low', 'Open': 'open', 'Close': 'close'})
+        news_dataframe = clean_data(
+            filepath=news_filepath,
+            save_columns=['timestamp', 'text'],
+            rename_columns_dict={'Date': 'timestamp', 'Title': 'text'}
+        )
+        price_dataframe = clean_data(
+            filepath=price_filepath,
+            save_columns=['timestamp', 'open', 'high', 'low'],
+            rename_columns_dict={'Date': 'timestamp', 'High': 'high', 'Low': 'low', 'Open': 'open', 'Close': 'close'}
+        )
         news_and_price_dataframe1 = self.clean_news_and_price(news_and_price_filepath1)
         news_and_price_dataframe2 = self.clean_news_and_price(news_and_price_filepath2)
 
         # Set this processor's list of dataframes
         self.dataframes = [news_dataframe, news_and_price_dataframe1, news_and_price_dataframe2, price_dataframe]
-
 
     @staticmethod
     def combine_dataframes_with_transform(dataframes: List[pd.DataFrame]) -> pd.DataFrame:
@@ -57,12 +64,11 @@ class BitcoinProcessor:
         DataFrame
             Returns clean combined dataframe.
         """
-        combined_dataframe = pd.concat(dataframes, ignore_index=True) # Concatenate the dataframes
+        combined_dataframe = pd.concat(dataframes, ignore_index=True)  # Concatenate the dataframes
         combined_dataframe['text'] = combined_dataframe.groupby(['timestamp'])['text'].transform(
-            lambda x: ' '.join(map(str, x))) # Group by timestamp to combine all the news into a single text column
+            lambda x: ' '.join(map(str, x)))  # Group by timestamp to combine all the news into a single text column
         combined_dataframe.dropna(inplace=True)
         return combined_dataframe
-
 
     @staticmethod
     def clean_news_and_price(filepath: str) -> pd.DataFrame:
@@ -82,25 +88,25 @@ class BitcoinProcessor:
         rename_columns_dict = {'date': 'timestamp'}
         save_columns = ['timestamp', 'text', 'price', 'open', 'high', 'low']
 
-        dataframe = pd.read_csv(filepath)
-        dataframe = dataframe.rename(columns=rename_columns_dict) # Rename columns
+        df = pd.read_csv(filepath)
+        df = df.rename(columns=rename_columns_dict)  # Rename columns
 
-        columns = dataframe.columns.tolist()
+        columns = df.columns.tolist()
         news_columns = []
 
-        # Get all of the news columns
+        # Get all the news columns
         for col in columns:
             if col.startswith('top'):
                 news_columns.append(col)
 
         # Join all the news columns into a new text column
-        dataframe['text'] = dataframe[news_columns].apply(
+        df['text'] = df[news_columns].apply(
             lambda x: ','.join(x.dropna().astype(str)),
             axis=1
         )
-        dataframe = dataframe[save_columns] # Save only specific columns
+        df = df[save_columns]  # Save only specific columns
 
-        return dataframe
+        return df
 
 
 if __name__ == "__main__":

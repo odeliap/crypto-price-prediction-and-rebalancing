@@ -25,25 +25,27 @@ bitcoin_input_filepath = '../data_cleaner/outputs/bitcoin_dataset.csv'
 ethereum_input_filepath = '../data_cleaner/outputs/ethereum_dataset.csv'
 solana_input_filepath = '../data_cleaner/outputs/solana_dataset.csv'
 
-filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath] # files to perform sentiment analysis on
+# files to perform sentiment analysis on
+filepaths = [bitcoin_input_filepath, ethereum_input_filepath, solana_input_filepath]
 
 # ------------- Class -------------
+
 
 class SentimentAnalyzer:
 
     def __init__(
         self,
-        dataframe: pd.DataFrame
+        df: pd.DataFrame
     ) -> None:
         """
         Initializes a new sentiment analyzer object.
 
         Parameters
         __________
-        dataframe : pandas dataframe
+        df : pandas dataframe
             Dataset to perform sentiment analysis on.
         """
-        self.dataframe = dataframe
+        self.dataframe = df
 
         self.dataframe['text'] = self.clean_headlines()
 
@@ -53,7 +55,6 @@ class SentimentAnalyzer:
         self.daily_sentiment_score_retriever()
 
         self.dataframe = self.dataframe[keep_columns]
-
 
     def clean_headlines(self) -> List[str]:
         """
@@ -75,14 +76,13 @@ class SentimentAnalyzer:
             raise Exception("'text' column not found in file; add 'text' column and rerun to proceed.")
 
         for i in range(0, len(headlines)):
-            clean_headlines.append(re.sub("b[(')]", '', headlines[i])) # remove b'
-            clean_headlines[i] = re.sub('b[(")]', '', clean_headlines[i]) # remove b"
-            clean_headlines[i] = re.sub("\'", '', clean_headlines[i]) # remove \'
+            clean_headlines.append(re.sub("b[(')]", '', headlines[i]))  # remove b'
+            clean_headlines[i] = re.sub('b[(")]', '', clean_headlines[i])  # remove b"
+            clean_headlines[i] = re.sub("\'", '', clean_headlines[i])  # remove \'
 
         logging.info('cleaned headers')
 
         return clean_headlines
-
 
     def daily_sentiment_score_retriever(self) -> None:
         """
@@ -95,17 +95,16 @@ class SentimentAnalyzer:
         neu = []
 
         for i in range(0, len(self.dataframe['text'])):
-            SIA = self.get_SIA(self.dataframe['text'][i])
-            compound.append(SIA['compound'])
-            neg.append(SIA['neg'])
-            neu.append(SIA['neu'])
-            pos.append(SIA['pos'])
+            sia = self.get_SIA(self.dataframe['text'][i])
+            compound.append(sia['compound'])
+            neg.append(sia['neg'])
+            neu.append(sia['neu'])
+            pos.append(sia['pos'])
 
         self.dataframe['compound'] = compound
         self.dataframe['negative'] = neg
         self.dataframe['neutral'] = neu
         self.dataframe['positive'] = pos
-
 
     @staticmethod
     def get_subjectivity(text: str) -> float:
@@ -126,7 +125,6 @@ class SentimentAnalyzer:
         subjectivity_score = TextBlob(text).sentiment.subjectivity
         return subjectivity_score
 
-
     @staticmethod
     def get_polarity(text: str) -> float:
         """
@@ -145,7 +143,6 @@ class SentimentAnalyzer:
         logging.info('getting polarity')
         polarity_score = TextBlob(text).sentiment.polarity
         return polarity_score
-
 
     @staticmethod
     def get_SIA(text: str) -> dict:
@@ -166,7 +163,6 @@ class SentimentAnalyzer:
         sia = SentimentIntensityAnalyzer()
         sentiment = sia.polarity_scores(text)
         return sentiment
-
 
 
 if __name__ == "__main__":

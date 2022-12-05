@@ -28,22 +28,23 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------- Constants -------------
 
-test_split = 0.90 # train test split
+test_split = 0.90  # train test split
 
 # Paths for saving model and scaler
 modelSavedPath = './outputs/models/SentimentLSTMModel'
 scalerSavedPath = './outputs/scalers/SentimentLSTMScaler'
 
-coins = ['bitcoin', 'ethereum', 'solana'] # available coins
+coins = ['bitcoin', 'ethereum', 'solana']  # available coins
 
 # ------------- Class -------------
+
 
 class SentimentLSTMModel:
 
     def __init__(
         self,
         dataframe: pd.DataFrame,
-        coin: str
+        coin_name: str
     ) -> None:
         """
         Initialize SentimentLSTMModel
@@ -52,19 +53,20 @@ class SentimentLSTMModel:
         ----------
         dataframe : pandas dataframe
             Dataset to process.
-        coin : string
+        coin_name : string
             Coin of interest.
         """
         self.dataframe = dataframe
-        self.coin = coin
+        self.coin = coin_name
 
-        self.scaler = MinMaxScaler(feature_range=(0,1)) # Set scaler to min max scaler
+        self.scaler = MinMaxScaler(feature_range=(0, 1))  # Set scaler to min max scaler
 
-        train_size = int(len(dataframe) * test_split) # Set training data size
-        test_size = len(dataframe) - train_size # Set testing data size
+        train_size = int(len(dataframe) * test_split)  # Set training data size
+        test_size = len(dataframe) - train_size  # Set testing data size
 
-        new_data = self.dataframe.loc[:,
-                   ['open', 'timestamp', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']] # Get all the input features and the output price columns
+        # Get all the input features and the output price columns
+        new_data = self.dataframe.loc[
+                   :, ['open', 'timestamp', 'subjectivity', 'polarity', 'compound', 'negative', 'neutral', 'positive']]
 
         # Clean timestamp columns
         date = new_data.timestamp.values
@@ -74,39 +76,44 @@ class SentimentLSTMModel:
         new_data['timestamp'] = dates
 
         # Get training and testing data for each input feature and the output prices
-        timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test = self.preprocess(new_data, train_size, test_size)
+        timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, \
+            compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, \
+            positive_test, open_train, open_test = self.preprocess(new_data, train_size, test_size)
 
         # Initialize logs
-        logdir="logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        logdir = "logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logdir)
 
         # Initialize recurrent neural network
-        self.rnn = self.buildModel(1)
+        self.rnn = self.build_model(1)
         # Fit the input features and output prices to the model
-        self.rnn.fit([timestamp_train, subjectivity_train, polarity_train, compound_train, negative_train, neutral_train, positive_train],
-                [open_train],
-                validation_data = ([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test], [open_test]),
-                epochs = 1,
-                batch_size = 10,
-                callbacks = [tensorboard_callback]
-                )
+        self.rnn.fit(
+            [timestamp_train, subjectivity_train, polarity_train, compound_train, negative_train, neutral_train,
+             positive_train],
+            [open_train],
+            validation_data=([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test,
+                              neutral_test, positive_test], [open_test]),
+            epochs=1,
+            batch_size=10,
+            callbacks=[tensorboard_callback]
+        )
 
         # Make scaled predictions using the test data
-        scaled_result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test, negative_test, neutral_test, positive_test])
+        scaled_result = self.rnn.predict([timestamp_test, subjectivity_test, polarity_test, compound_test,
+                                          negative_test, neutral_test, positive_test])
         # Transform the scaled predictions to actual prices
         result = self.scaler.inverse_transform(scaled_result)
 
         # Generate report and graphs for test results
-        self.report_and_graph_test_results(coin, result, open_test)
+        self.report_and_graph_test_results(coin_name, result, open_test)
 
         # Save the model and scaler
-        save_model(self.rnn, f'{modelSavedPath}_{coin}.sav')
-        save_scaler(self.scaler, f'{scalerSavedPath}_{coin}.pkl')
-
+        save_model(self.rnn, f'{modelSavedPath}_{coin_name}.sav')
+        save_scaler(self.scaler, f'{scalerSavedPath}_{coin_name}.pkl')
 
     def report_and_graph_test_results(
         self,
-        coin: str,
+        coin_name: str,
         result: np.ndarray,
         test_output: np.ndarray
     ) -> None:
@@ -115,7 +122,7 @@ class SentimentLSTMModel:
 
         Parameters
         ----------
-        coin : string
+        coin_name : string
             Coin of interest.
         result : 2d array-like
             Predicted outputs array.
@@ -152,9 +159,8 @@ class SentimentLSTMModel:
         logging.info(f'{test_actual_prices_1d}\n')
 
         # Graph actual prices against predicted prices
-        generate_comparison_graph(test_actual_prices_1d, predictions, coin,
-                        f'outputs/graphs/SentimentLSTMModel_comparison_{coin}.png')
-
+        generate_comparison_graph(test_actual_prices_1d, predictions, coin_name,
+                                  f'outputs/graphs/SentimentLSTMModel_comparison_{coin_name}.png')
 
     def preprocess(
         self,
@@ -220,7 +226,7 @@ class SentimentLSTMModel:
         neutral = dataframe['neutral'].values.reshape(-1, 1)
         positive = dataframe['positive'].values.reshape(-1, 1)
         # Get output price column
-        open = dataframe['open'].values.reshape(-1, 1)
+        open_prices = dataframe['open'].values.reshape(-1, 1)
 
         # Transform features with scaler
         timestamp_ = self.scaler.fit_transform(timestamp)
@@ -231,7 +237,7 @@ class SentimentLSTMModel:
         neutral_ = self.scaler.fit_transform(neutral)
         positive_ = self.scaler.fit_transform(positive)
         # Transform output prices with scaler
-        open_ = self.scaler.fit_transform(open)
+        open_prices_ = self.scaler.fit_transform(open_prices)
 
         # Split each feature into training ana testing set
         timestamp_train, timestamp_test = self.split_train_test(timestamp_, train_size, test_size)
@@ -242,12 +248,14 @@ class SentimentLSTMModel:
         neutral_train, neutral_test = self.split_train_test(neutral_, train_size, test_size)
         positive_train, positive_test = self.split_train_test(positive_, train_size, test_size)
         # Split output prices into training and testing set
-        open_train, open_test = self.split_train_test(open_, train_size, test_size)
+        open_train, open_test = self.split_train_test(open_prices_, train_size, test_size)
 
-        return timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, positive_train, positive_test, open_train, open_test
+        return timestamp_train, timestamp_test, subjectivity_train, subjectivity_test, polarity_train, polarity_test, \
+            compound_train, compound_test, negative_train, negative_test, neutral_train, neutral_test, \
+            positive_train, positive_test, open_train, open_test
 
-
-    def split_train_test(self, arr: np.array, train_size: int, test_size: int) -> np.ndarray:
+    @staticmethod
+    def split_train_test(arr: np.array, train_size: int, test_size: int) -> np.ndarray:
         """
         Split object into training and testing data.
 
@@ -272,8 +280,8 @@ class SentimentLSTMModel:
 
         return arr_train, arr_test
 
-
-    def buildModel(self, label_len: int) -> Model:
+    @staticmethod
+    def build_model(label_len: int) -> Model:
         """
         Build model.
 
@@ -288,29 +296,36 @@ class SentimentLSTMModel:
             Rnn model.
         """
         # Create Input for each feature
-        timestamp = tf.keras.Input(shape=(1,1), name='timestamp')
-        subjectivity = tf.keras.Input(shape=(1,1), name='subjectivity')
-        polarity = tf.keras.Input(shape=(1,1), name='polarity')
+        timestamp = tf.keras.Input(shape=(1, 1), name='timestamp')
+        subjectivity = tf.keras.Input(shape=(1, 1), name='subjectivity')
+        polarity = tf.keras.Input(shape=(1, 1), name='polarity')
         compound = tf.keras.Input(shape=(1, 1), name='compound')
         negative = tf.keras.Input(shape=(1, 1), name='negative')
         neutral = tf.keras.Input(shape=(1, 1), name='neutral')
         positive = tf.keras.Input(shape=(1, 1), name='positive')
 
         # Create layer for each feature
-        timestampLayers = LSTM(100, return_sequences=False)(timestamp)
-        subjectivityLayers = LSTM(100, return_sequences=False)(subjectivity)
-        polarityLayers = LSTM(100, return_sequences=False)(polarity)
-        compoundLayers = LSTM(100, return_sequences=False)(compound)
-        negativeLayers = LSTM(100, return_sequences=False)(negative)
-        neutralLayers = LSTM(100, return_sequences=False)(neutral)
-        positiveLayers = LSTM(100, return_sequences=False)(positive)
+        timestamp_layers = LSTM(100, return_sequences=False)(timestamp)
+        subjectivity_layers = LSTM(100, return_sequences=False)(subjectivity)
+        polarity_layers = LSTM(100, return_sequences=False)(polarity)
+        compound_layers = LSTM(100, return_sequences=False)(compound)
+        negative_layers = LSTM(100, return_sequences=False)(negative)
+        neutral_layers = LSTM(100, return_sequences=False)(neutral)
+        positive_layers = LSTM(100, return_sequences=False)(positive)
 
         # Concatenate feature layers
-        output = tf.keras.layers.concatenate(inputs=[timestampLayers, subjectivityLayers, polarityLayers, compoundLayers, negativeLayers, neutralLayers, positiveLayers], axis=1)
+        output = tf.keras.layers.concatenate(
+            inputs=[timestamp_layers, subjectivity_layers, polarity_layers, compound_layers, negative_layers,
+                    neutral_layers, positive_layers],
+            axis=1
+        )
         output = Dense(label_len, activation='relu', name='weightedAverage_output_7')(output)
 
         # Generate model with concatenated feature inputs
-        model = Model(inputs=[timestamp, subjectivity, polarity, compound, negative, neutral, positive], outputs=[output])
+        model = Model(
+            inputs=[timestamp, subjectivity, polarity, compound, negative, neutral, positive],
+            outputs=[output]
+        )
 
         # User adam optimiser
         optimizer = Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999)
@@ -320,14 +335,13 @@ class SentimentLSTMModel:
 
         return model
 
-
-    def predict(self, X: np.array) -> np.array:
+    def predict(self, x: np.array) -> np.array:
         """
         Predict future prices for input data.
 
         Parameters
         ----------
-        X : numpy array
+        x : numpy array
             Input data.
 
         Returns
@@ -335,20 +349,20 @@ class SentimentLSTMModel:
         predictions : numpy array
             Predicted future prices.
         """
-        scaled_predictions = self.rnn.predict(X) # Get scaled predicted prices
-        predictions = self.scaler.inverse_transform(scaled_predictions) # Convert scaled prices to actual prices
+        scaled_predictions = self.rnn.predict(x)  # Get scaled predicted prices
+        predictions = self.scaler.inverse_transform(scaled_predictions)  # Convert scaled prices to actual prices
         return predictions
 
 
-def predict(X: np.array, coin: str) -> np.array:
+def predict(x: np.array, coin_name: str) -> np.array:
     """
     Predict future prices for input data on saved model.
 
     Parameters
     ----------
-    X : numpy array
+    x : numpy array
         Input data.
-    coin : string
+    coin_name : string
         Coin of interest.
 
     Returns
@@ -357,28 +371,29 @@ def predict(X: np.array, coin: str) -> np.array:
         Predicted future prices.
     """
     # Load saved model and scaler
-    model = load_object(f'{modelSavedPath}_{coin}.sav')
-    scaler = load_object(f'{scalerSavedPath}_{coin}.pkl')
+    model = load_object(f'{modelSavedPath}_{coin_name}.sav')
+    scaler = load_object(f'{scalerSavedPath}_{coin_name}.pkl')
 
-    scaled_predictions = model.predict(X) # Get scaled predicted prices
-    predictions = scaler.inverse_transform(scaled_predictions) # Convert scaled prices to actual prices
+    scaled_predictions = model.predict(x)  # Get scaled predicted prices
+    predictions = scaler.inverse_transform(scaled_predictions)  # Convert scaled prices to actual prices
 
     return predictions
 
-def main(coin: str, filepath: str) -> None:
+
+def main(coin_name: str, fully_qualified_filepath: str) -> None:
     """
     Create SentimentLSTMModel for coin and dataset from filepath.
 
     Parameters
     __________
-    coin : string
+    coin_name : string
         Coin of interest.
-    filepath : string
+    fully_qualified_filepath : string
         Filepath to dataset.
     """
-    dataframe = pd.read_csv(filepath) # load csv from filepath
+    dataframe = pd.read_csv(fully_qualified_filepath)  # load csv from filepath
 
-    columns = dataframe.columns # Get dataframe columns
+    columns = dataframe.columns  # Get dataframe columns
 
     drop_columns = []
     check_columns = ['close', 'high', 'low']
@@ -390,9 +405,9 @@ def main(coin: str, filepath: str) -> None:
         if col in columns:
             drop_columns.append(col)
 
-    dataframe = dataframe.drop(columns=drop_columns) # drop columns
+    dataframe = dataframe.drop(columns=drop_columns)  # drop columns
 
-    SentimentLSTMModel(dataframe, coin) # Generate model for cleaned dataframe and coin
+    SentimentLSTMModel(dataframe, coin_name)  # Generate model for cleaned dataframe and coin
 
 
 if __name__ == "__main__":
@@ -402,4 +417,3 @@ if __name__ == "__main__":
     for coin in coins:
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
         main(coin, filepath)
-

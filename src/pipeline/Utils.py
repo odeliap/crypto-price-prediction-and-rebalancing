@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 
 # ----------- Functions -----------
 
+
 def make_directory(path: str) -> None:
     """
     Make directory.
@@ -41,8 +42,8 @@ def make_dirs(directories: List[str]) -> None:
     directories : list of strings
         Directories to create.
     """
-    for dir in directories:
-        make_directory(dir)
+    for directory in directories:
+        make_directory(directory)
 
 
 def delete_dirs(directories: List[str]) -> None:
@@ -54,16 +55,16 @@ def delete_dirs(directories: List[str]) -> None:
     directories : list of strings
         Directories to delete.
     """
-    for dir in directories:
-        shutil.rmtree(dir)
+    for directory in directories:
+        shutil.rmtree(directory)
 
 
 def clean_prices_dataframe(
-        prev_prices: pd.DataFrame,
-        start_date: datetime,
-        end_date: datetime,
-        date_format
-    ) -> pd.DataFrame:
+    prev_prices: pd.DataFrame,
+    start_date: datetime,
+    end_date: datetime,
+    date_format
+) -> pd.DataFrame:
     """
     Clean prices dataframe.
 
@@ -134,8 +135,8 @@ def format_sentiment_input_for_predictions(filepath: str) -> (pd.DataFrame, np.a
     open_prices : numpy array
         Corresponding open prices.
     """
-    dataframe = pd.read_csv(filepath, header = 0, low_memory = False, infer_datetime_format = True, index_col = ['timestamp'])
+    dataframe = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
     print(dataframe)
-    input = dataframe.drop(dataframe.columns[[0]], axis=1)
+    input_data = dataframe.drop(dataframe.columns[[0]], axis=1)
     output = dataframe.open.values
-    return input, output
+    return input_data, output

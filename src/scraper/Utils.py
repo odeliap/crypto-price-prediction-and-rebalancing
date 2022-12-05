@@ -12,6 +12,7 @@ import os
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
+
 def merge(dictionary1: dict, dictionary2: dict) -> dict:
     """
     Merges two dictionaries into single dictionary.

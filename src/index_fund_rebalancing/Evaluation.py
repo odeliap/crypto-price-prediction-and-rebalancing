@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 # ------------ Functions ------------
 
+
 def plot_comparison(new_fund: pd.DataFrame, standard_fund: pd.DataFrame, standard_fund_name: str) -> None:
     """
     Plot performance of funds in comparison.

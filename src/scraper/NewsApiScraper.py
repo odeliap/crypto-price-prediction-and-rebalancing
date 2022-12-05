@@ -19,18 +19,19 @@ logging.basicConfig(level=logging.INFO)
 
 api_key = '681ea4f3f4de4f29a08687c9f692beed'
 
-categories = ['business', 'technology'] # categories to query
+categories = ['business', 'technology']  # categories to query
 
 country = 'us'
 date_format = '%Y-%m-%d'
-#end_date = datetime.today().strftime(date_format) # Set scraping end date
-#start_date = datetime.strptime(end_date, date_format) - relativedelta(days=30) # Set scraping start date
+# end_date = datetime.today().strftime(date_format) # Set scraping end date
+# start_date = datetime.strptime(end_date, date_format) - relativedelta(days=30) # Set scraping start date
 sort_by = 'popularity'
 page_size = 100
 
 column_names = ['text', 'timestamp']
 
 # ------------- Class -------------
+
 
 class NewsApiScraper:
     """
@@ -66,42 +67,45 @@ class NewsApiScraper:
         self.start_date = start_date
         self.end_date = end_date
 
-
     def get_all_headlines(self) -> None:
         """
         Gets all the headlines across categories of interest.
         Results are appended to self.headlines pandas dataframe.
         """
-        headlines = self.base_get_all_headlines()
+        self.base_get_all_headlines()
         # Below commented out code requires purchasing premium plan
         # to increase querying limit
-        """if headlines is not None:
+        """
+        headlines = self.base_get_all_headlines()
+        if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
                 remaining_pages = self.remaining_pages(total_results)
                 for page in range(2, remaining_pages + 2):
                     if self.daily_api_requests > 0:
                         self.base_get_all_headlines(page)
-                        self.daily_api_requests -= 1"""
-
+                        self.daily_api_requests -= 1
+        """
 
     def get_top_headlines(self) -> None:
         """
         Gets all top headlines across categories of interest.
         Results are appended to self.headlines pandas dataframe.
         """
-        headlines = self.base_get_top_headlines()
+        self.base_get_top_headlines()
         # Below commented out code requires purchasing premium plan
         # to increase querying limit
-        """if headlines is not None:
+        """
+        headlines = self.base_get_top_headlines()
+        if headlines is not None:
             total_results = headlines.get('totalResults')
             if total_results > 100:
                 remaining_pages = self.remaining_pages(total_results)
                 for page in range(2, remaining_pages + 2):
                     if self.daily_api_requests > 0:
                         self.base_get_top_headlines(page)
-                        self.daily_api_requests -= 1"""
-
+                        self.daily_api_requests -= 1
+        """
 
     def base_get_all_headlines(self, page: int = 1) -> dict:
         """
@@ -131,7 +135,6 @@ class NewsApiScraper:
 
         return headlines
 
-
     def base_get_top_headlines(self, page: int = 1) -> dict:
         """
         Send news api top headlines request.
@@ -157,7 +160,6 @@ class NewsApiScraper:
 
         return headlines
 
-
     def get_all_sources(self) -> str:
         """
         Gets all the sources available across the categories of interest.
@@ -171,20 +173,19 @@ class NewsApiScraper:
 
         for category in categories:
             sources_info = self.newsapi.get_sources(
-                category = category,
-                country = country
+                category=category,
+                country=country
             )
             if sources_info is not None:
                 sources = sources_info.get('sources')
                 for source in sources:
-                    id = source.get('id')
-                    combined_sources.append(id)
+                    source_id = source.get('id')
+                    combined_sources.append(source_id)
 
         logging.info(f'Found sources: {combined_sources}')
 
         sources = ','.join(combined_sources)
         return sources
-
 
     def news_api_dict_to_dataframe(self, dictionary) -> None:
         """
@@ -201,14 +202,13 @@ class NewsApiScraper:
         for article in articles:
             title = article.get('title')
             description = article.get('description')
-            publishedAt = article.get('publishedAt').replace('T', ' ').replace('Z', '')
-            space = publishedAt.index(' ')
-            timestamp = publishedAt[0:space]
+            published_at = article.get('publishedAt').replace('T', ' ').replace('Z', '')
+            space = published_at.index(' ')
+            timestamp = published_at[0:space]
             row = {'text': title + ' ' + description, 'timestamp': timestamp}
             logging.info(f'row: {row}')
             self.headlines = self.headlines.append(row, ignore_index=True)
         logging.info(f'updated headlines: {self.headlines}')
-
 
     @staticmethod
     def remaining_pages(total_results: int) -> int:
