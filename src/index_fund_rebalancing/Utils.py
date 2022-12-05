@@ -11,6 +11,7 @@ import datetime
 
 # ----------- Functions -----------
 
+
 def CAGR(data: pd.DataFrame, start_date: datetime, end_date: datetime) -> float:
     """
     Calculate and return compound annual growth rate.
@@ -106,7 +107,7 @@ def maximum_drawdown(data: pd.DataFrame) -> float:
         Maximum drawdown.
     """
     dataframe = data.copy()
-    dataframe['cumulative_returns'] =  (1 + dataframe['monthly_returns']).cumprod()
+    dataframe['cumulative_returns'] = (1 + dataframe['monthly_returns']).cumprod()
     dataframe['cumulative_max'] = dataframe['cumulative_returns'].cummax()
     dataframe['drawdown'] = dataframe['cumulative_max'] - dataframe['cumulative_returns']
     dataframe['drawdown_pct'] = dataframe['drawdown'] / dataframe['cumulative_max']

@@ -7,14 +7,10 @@ import logging
 
 import streamlit as st
 
-import pandas as pd
-
-from datetime import datetime, timedelta
-
 import yfinance as yf
 
-from Utils import make_dirs, delete_dirs, clean_prices_dataframe, combine_dataframes, format_sentiment_input_for_predictions
-from src.scraper.NewsApiScraper import main as newsScraper
+from Utils import *
+from src.scraper.NewsApiScraper import main as news_scraper
 from src.sentiment_analysis.SentimentAnalyzer import SentimentAnalyzer
 from src.models.SentimentPriceLSTMModel import predict
 """
@@ -27,13 +23,13 @@ logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-cryptocurrencies = {'Bitcoin': 'BTC-USD'}
-#cryptocurrencies = {'Bitcoin': 'BTC-USD', 'Ethereum': 'ETH-USD', 'Solana': 'SOL-USD'}
-cryptocurrency_names = cryptocurrencies.keys()
+available_cryptocurrencies = {'Bitcoin': 'BTC-USD'}
+# available_cryptocurrencies = {'Bitcoin': 'BTC-USD', 'Ethereum': 'ETH-USD', 'Solana': 'SOL-USD'}
 
-crypto_names = cryptocurrencies.keys()
+crypto_names = available_cryptocurrencies.keys()
 
 n_steps_in = 30
+n_steps_out = 15
 
 numStocks = 3
 numRev = 1
@@ -41,13 +37,13 @@ numRev = 1
 days_to_subtract = 30
 
 # Set start and end dates for scraping previous prices and news
-end_date = datetime.today()
-start_date = end_date - timedelta(days=days_to_subtract)
+end_date_datetime = datetime.today()
+start_date_datetime = end_date_datetime - timedelta(days=days_to_subtract)
 
 # Get string formatted start and end dates
 date_format = '%Y-%m-%d'
-end_date_str = end_date.strftime(date_format)
-start_date_str = start_date.strftime(date_format)
+end_date_str = end_date_datetime.strftime(date_format)
+start_date_str = start_date_datetime.strftime(date_format)
 
 # Temporary directories to be created
 temp_dir = 'temporary'
@@ -66,11 +62,12 @@ mmScalerSavedPath = f'src/models/outputs/scalers/SentimentPriceLSTMMmScaler'
 
 # ----------- Main -----------
 
+
 def pipeline(
         cryptocurrencies: dict,
         start_date: datetime,
         end_date: datetime,
-        date_format: str
+        date_str_format: str
 ):
     """
     Run pipeline end-to-end.
@@ -83,7 +80,7 @@ def pipeline(
         Date to start scraping historical data from.
     end_date : datetime
         Date to stop scraping historical data to.
-    date_format : str
+    date_str_format : str
         Date format for formatting datetime objects.
     """
     with st.spinner(f'Retrieving previous daily prices'):
@@ -92,14 +89,14 @@ def pipeline(
             # Use yfinance to download last 30 days of historical prices
             prev_prices = yf.download(cryptocurrencies.get(coin), start=start_date_str, end=end_date_str, interval='1d')
             # Clean the price dataframe
-            prev_prices_clean = clean_prices_dataframe(prev_prices, start_date, end_date, date_format)
+            prev_prices_clean = clean_prices_dataframe(prev_prices, start_date, end_date, date_str_format)
             # Save historical prices dataframe to csv to the prices subdirectory
             prev_prices_clean.to_csv(f'{price_subdir}/{coin.lower()}_prev_prices.csv', index=False)
     with st.spinner(f'Scraping news'):
         # For each available coin
         for coin in crypto_names:
             # Use News API to get last 30 days of related news
-            news_dataframe = newsScraper(coin, start_date, end_date)
+            news_dataframe = news_scraper(coin, start_date, end_date)
             # Save related news dataframe to csv to the news subdirectory
             news_dataframe.to_csv(f'{news_subdir}/{coin.lower()}_news.csv', index=False)
     with st.spinner(f'Cleaning input data for sentiment analysis'):
@@ -122,18 +119,23 @@ def pipeline(
     with st.spinner(f'Retrieving predicted prices'):
         for coin in crypto_names:
             # Load the sentiment dataframe
-            sentiment_data, open_prices = format_sentiment_input_for_predictions(f'{sentiment_subdir}/{coin}_sentiment.csv')
+            sentiment_data, open_prices = \
+                format_sentiment_input_for_predictions(f'{sentiment_subdir}/{coin}_sentiment.csv')
             # Make predictions
             predictions = predict(
                 sentiment_data,
                 open_prices,
-                coin, n_steps_in,
+                coin,
+                n_steps_in,
+                n_steps_out,
                 modelSavedPath,
                 ssScalerSavedPath,
                 mmScalerSavedPath
             )
             # Save predictions to the predictions subdirectory
             predictions.to_csv(f'{predicted_subdir}/{coin}_predictions.csv')
+
+
 """
     # TODO: Combine predicted prices into single csv file and save to predicted prices subdirectory
     predicted_prices = pd.DataFrame()
@@ -148,5 +150,5 @@ def main():
     Run pipeline.
     """
     make_dirs(temporary_directories)
-    pipeline(cryptocurrencies, start_date, end_date, date_format)
-    #delete_dirs(temporary_directories)
+    pipeline(available_cryptocurrencies, start_date_datetime, end_date_datetime, date_format)
+    # delete_dirs(temporary_directories)

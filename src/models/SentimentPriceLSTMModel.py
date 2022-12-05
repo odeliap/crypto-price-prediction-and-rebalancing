@@ -29,12 +29,12 @@ warnings.filterwarnings('ignore')
 
 # ------------- Constants -------------
 
-n_epochs = 1000 # Number of epochs for training
-learning_rate = 0.001 # Learning rate for training
+num_epochs = 1000  # Number of epochs for training
+learning_rate = 0.001  # Learning rate for training
 
-input_size = 8 # Number of input features
-hidden_size = 2 # Number of features in hidden state
-num_layers = 1 # Number of stacked lstm layers
+in_size = 8  # Number of input features
+hidden_layer_size = 2  # Number of features in hidden state
+n_layers = 1  # Number of stacked lstm layers
 
 # Paths for saving model and scalers
 modelSavedPath = f'outputs/models/SentimentPriceLSTMModel'
@@ -42,14 +42,15 @@ ssScalerSavedPath = f'outputs/scalers/SentimentPriceLSTMSsScaler'
 mmScalerSavedPath = f'outputs/scalers/SentimentPriceLSTMMmScaler'
 
 
-plot_style = 'seaborn-v0_8-pastel' # Plot style
+plot_style = 'seaborn-v0_8-pastel'  # Plot style
 
-n_steps_in = 30
-n_steps_out = 15
+num_steps_in = 30
+num_steps_out = 15
 
-coins = {'bitcoin': 0.95, 'ethereum': 0.90, 'solana': 0.70} # available coins to number of input/output steps
+coins = {'bitcoin': 0.95, 'ethereum': 0.90, 'solana': 0.70}  # available coins to number of input/output steps
 
 # ------------- Class -------------
+
 
 class SentimentPriceLSTM(nn.Module):
 
@@ -95,13 +96,13 @@ class SentimentPriceLSTM(nn.Module):
         # and leave non-negative elements unchanged
         self.relu = nn.ReLU()
 
-    def forward(self, X: np.array) -> torch.Tensor:
+    def forward(self, x: np.array) -> torch.Tensor:
         """
         Performs lstm forward pass.
 
         Parameters
         ----------
-        X : numpy array
+        x : numpy array
             Input data.
 
         Returns
@@ -109,13 +110,13 @@ class SentimentPriceLSTM(nn.Module):
         Tensor
             Output tensor.
         """
-        h_0 = Variable(torch.zeros(self.num_layers, X.size(0), self.hidden_size)) # Hidden state
-        c_0 = Variable(torch.zeros(self.num_layers, X.size(0), self.hidden_size)) # Cell state
+        h_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size))  # Hidden state
+        c_0 = Variable(torch.zeros(self.num_layers, x.size(0), self.hidden_size))  # Cell state
 
         # Propagate input through LSTM
-        output, (hn, cn) = self.lstm(X, (h_0, c_0))  # Get output, hidden, and cell state at next step
+        output, (hn, cn) = self.lstm(x, (h_0, c_0))  # Get output, hidden, and cell state at next step
         hn = hn.view(-1, self.hidden_size)  # Reshape the hidden state at next step for dense layer
-        out = self.relu(hn)   # Apply the rectified linear unit function element-wise
+        out = self.relu(hn)  # Apply the rectified linear unit function element-wise
         out = self.fc_1(out)  # Get first dense layer
         out = self.relu(out)  # Apply the rectified linear unit function element-wise
         out = self.fc_2(out)  # Get the final output by fully connecting the last layer
@@ -144,23 +145,26 @@ def split_sequences(
 
     Returns
     -------
-    X_arr
+    x_arr
         Numpy array of x (input) data
     y_arr
         Numpy array of y (output) data
     """
-    X, y = list(), list() # Instantiate X and y
+    x, y = list(), list()  # Instantiate X and y
     # Loop over the length of the input sequences
     for i in range(len(input_sequences)):
         # Find the end of the input, output sequence
         end_ix = i + n_steps_in
         out_end_ix = end_ix + n_steps_out - 1
         # Check if we are beyond the dataset
-        if out_end_ix > len(input_sequences): break
+        if out_end_ix > len(input_sequences):
+            break
         # Gather input and output of the pattern
         seq_x, seq_y = input_sequences[i:end_ix], output_sequence[end_ix-1:out_end_ix, -1]
-        X.append(seq_x), y.append(seq_y)
-    return np.array(X), np.array(y)
+        x.append(seq_x), y.append(seq_y)
+    x_arr = np.array(x)
+    y_arr = np.array(y)
+    return x_arr, y_arr
 
 
 def training_loop(
@@ -168,9 +172,9 @@ def training_loop(
     lstm: SentimentPriceLSTM,
     optimiser: torch.optim.Adam,
     loss_fn: torch.nn.MSELoss,
-    X_train: torch.Tensor,
+    x_train: torch.Tensor,
     y_train: torch.Tensor,
-    X_test: torch.Tensor,
+    x_test: torch.Tensor,
     y_test: torch.Tensor
 ) -> None:
     """
@@ -186,37 +190,42 @@ def training_loop(
         Optimiser for training.
     loss_fn : loss function
         Loss function.
-    X_train : Tensor
+    x_train : Tensor
         Input data for training.
     y_train : Tensor
         Output data for training.
-    X_test : Tensor
+    x_test : Tensor
         Testing input data.
     y_test : Tensor
         Testing output data.
     """
     for epoch in range(n_epochs):
         lstm.train()
-        outputs = lstm.forward(X_train) # Perform forward pass
-        optimiser.zero_grad() # Calculate the gradient, manually setting it to 0
+        outputs = lstm.forward(x_train)  # Perform forward pass
+        optimiser.zero_grad()  # Calculate the gradient, manually setting it to 0
         # Obtain the loss function
         loss = loss_fn(outputs, y_train)
-        loss.backward() # Calculate the loss of the loss function
-        optimiser.step() # Improve from the loss with backpropogation
+        loss.backward()  # Calculate the loss of the loss function
+        optimiser.step()  # Improve from the loss with backpropogation
         # Test the loss
         lstm.eval()
-        test_preds = lstm(X_test)
+        test_preds = lstm(x_test)
         test_loss = loss_fn(test_preds, y_test)
         if epoch % 100 == 0:
-            logging.info("Epoch: %d, train loss: %1.5f, test loss: %1.5f" % (epoch,
-                                                                      loss.item(),
-                                                                      test_loss.item()))
+            logging.info("Epoch: %d, train loss: %1.5f, test loss: %1.5f" % (
+                epoch,
+                loss.item(),
+                test_loss.item()
+                )
+            )
+
 
 def predict(
-    X: pd.DataFrame,
+    x: pd.DataFrame,
     y: np.array,
-    coin: str,
+    coin_name: str,
     n_steps_in: int,
+    n_steps_out: int,
     model_saved_path: str,
     ss_scaler_saved_path: str,
     mm_scaler_saved_path: str
@@ -226,14 +235,16 @@ def predict(
 
     Parameters
     ----------
-    X : pandas dataframe
+    x : pandas dataframe
         Input data.
     y : numpy array
         corresponding open prices for those dates.
-    coin : string
+    coin_name : string
         Coin of interest.
     n_steps_in : int
         Number of input steps for prediction.
+    n_steps_out : int
+        Number of output steps for prediction.
     model_saved_path : string
         Path to saved model.
     ss_scaler_saved_path : string
@@ -246,30 +257,31 @@ def predict(
     predictions : ndarray
         Output predictions
     """
-    lstm = load_object(f'{model_saved_path}_{coin}.sav') # load the lstm model
-    ss = load_object(f'{ss_scaler_saved_path}_{coin}.pkl') # load the ss scaler
-    mm = load_object(f'{mm_scaler_saved_path}_{coin}.pkl') # load the mm scaler
+    lstm = load_object(f'{model_saved_path}_{coin_name}.sav')  # load the lstm model
+    ss = load_object(f'{ss_scaler_saved_path}_{coin_name}.pkl')  # load the ss scaler
+    mm = load_object(f'{mm_scaler_saved_path}_{coin_name}.pkl')  # load the mm scaler
 
-    X_trans = ss.fit_transform(X) # transformed input data
-    y_trans = mm.fit_transform(y.reshape(-1, 1)) # transformed open prices
-    X_ss, y_ss = split_sequences(X_trans, y_trans, n_steps_in, n_steps_out)
-    X_tensors = Variable(torch.Tensor(X_ss))
-    print(torch.Tensor(X_trans).size())
-    X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], n_steps_in, X_tensors.shape[2])) # reshape the transformed variable input data
+    x_trans = ss.fit_transform(x)  # transformed input data
+    y_trans = mm.fit_transform(y.reshape(-1, 1))  # transformed open prices
+    x_ss, y_ss = split_sequences(x_trans, y_trans, n_steps_in, n_steps_out)
+    x_tensors = Variable(torch.Tensor(x_ss))
+    print(torch.Tensor(x_trans).size())
+    # reshape the transformed variable input data
+    x_train_tensors_final = torch.reshape(x_tensors, (x_tensors.shape[0], n_steps_in, x_tensors.shape[2]))
 
-    train_predict = lstm(X_train_tensors_final)  # perform forward pass
+    train_predict = lstm(x_train_tensors_final)  # perform forward pass
     predictions = train_predict.data.numpy()  # numpy conversion
     predictions = mm.inverse_transform(predictions)  # reverse transformation with mm scaler
     return predictions
 
 
-def plot_price_over_time(coin: str, dataframe: pd.DataFrame) -> None:
+def plot_price_over_time(coin_name: str, dataframe: pd.DataFrame) -> None:
     """
     Create and display plot of price over time.
 
     Parameters
     __________
-    coin : string
+    coin_name : string
         Coin of interest.
     dataframe : pandas dataframe
         Dataset to plot.
@@ -279,115 +291,138 @@ def plot_price_over_time(coin: str, dataframe: pd.DataFrame) -> None:
     plt.plot(dataframe.open)
     plt.xlabel("Time[Days]")
     plt.ylabel("Price (USD)")
-    plt.title(f"{coin.capitalize()} Price Over Time")
-    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_price_over_time_{coin}.png", dpi=300) # Save the figure to outputs directory
+    plt.title(f"{coin_name.capitalize()} Price Over Time")
+    # Save the figure to outputs directory
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_price_over_time_{coin_name}.png", dpi=300)
     plt.show()
 
 
-def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int, train_test_split) -> None:
+def main(
+        coin_name: str,
+        fully_qualified_filepath: str,
+        n_steps_in: int,
+        n_steps_out: int,
+        train_test_split: float
+) -> None:
     """
     Create lstm model, train it, and show evaluation of its performance
 
     Parameters
     ----------
-    coin : string
+    coin_name : string
         Coin of interest.
-    filepath : string
-        Filepath to dataset.
+    fully_qualified_filepath : string
+        Fully qualified filepath to dataset.
     n_steps_in : int
         Number of input steps for prediction.
     n_steps_out : int
         Number of output steps for prediction.
+    train_test_split : float
+        Split between training and testing data.
     """
     # Read in the dataset
-    df = pd.read_csv(filepath, header=0, low_memory=False, infer_datetime_format=True, index_col=['timestamp'])
+    df = pd.read_csv(
+        fully_qualified_filepath,
+        header=0,
+        low_memory=False,
+        infer_datetime_format=True,
+        index_col=['timestamp']
+    )
     df = df.drop(df.columns[[0]], axis=1)
 
     # Plot the price over time
-    plot_price_over_time(coin, df)
+    plot_price_over_time(coin_name, df)
 
     # Get input and output data
     # where the output data is the open price
-    X, y = df.drop(columns=['open']), df.open.values
+    x, y = df.drop(columns=['open']), df.open.values
 
     # Set the scalars
     mm = MinMaxScaler()
     ss = StandardScaler()
 
     # Get fitted x and y data
-    X_trans = ss.fit_transform(X)
+    x_trans = ss.fit_transform(x)
     y_trans = mm.fit_transform(y.reshape(-1, 1))
 
     # Get the input and output data split into sequences
     # of lengths corresponding to the number of input and output steps respectively
-    X_ss, y_mm = split_sequences(X_trans, y_trans, n_steps_in, n_steps_out)
+    x_ss, y_mm = split_sequences(x_trans, y_trans, n_steps_in, n_steps_out)
 
     # Get the total number of samples for training
-    total_samples = len(X)
+    total_samples = len(x)
     # Set the train/test cutoff
     train_test_cutoff = round(train_test_split * total_samples)
 
     # Get the train and test data
-    X_train = X_ss[:train_test_cutoff]
-    X_test = X_ss[train_test_cutoff:]
+    x_train = x_ss[:train_test_cutoff]
+    x_test = x_ss[train_test_cutoff:]
     y_train = y_mm[:train_test_cutoff]
     y_test = y_mm[train_test_cutoff:]
 
     # Convert the training and testing data to pytorch tensors
-    X_train_tensors = Variable(torch.Tensor(X_train))
-    X_test_tensors = Variable(torch.Tensor(X_test))
+    x_train_tensors = Variable(torch.Tensor(x_train))
+    x_test_tensors = Variable(torch.Tensor(x_test))
     y_train_tensors = Variable(torch.Tensor(y_train))
     y_test_tensors = Variable(torch.Tensor(y_test))
 
     # Reshape the training and testing to rows, timestamps, and features
-    X_train_tensors_final = torch.reshape(X_train_tensors, (X_train_tensors.shape[0], n_steps_in, X_train_tensors.shape[2]))
-    X_test_tensors_final = torch.reshape(X_test_tensors, (X_test_tensors.shape[0], n_steps_in, X_test_tensors.shape[2]))
+    x_train_tensors_final = torch.reshape(
+        x_train_tensors,
+        (x_train_tensors.shape[0], n_steps_in, x_train_tensors.shape[2])
+    )
+    x_test_tensors_final = torch.reshape(
+        x_test_tensors,
+        (x_test_tensors.shape[0], n_steps_in, x_test_tensors.shape[2])
+    )
 
     # Initiate the lstm model
-    lstm = SentimentPriceLSTM(n_steps_out,
-                input_size,
-                hidden_size,
-                num_layers)
+    lstm = SentimentPriceLSTM(
+        n_steps_out,
+        in_size,
+        hidden_layer_size,
+        n_layers
+    )
 
     # Define the training parameters
     loss_fn = torch.nn.MSELoss()  # mean-squared error for regression
-    optimiser = torch.optim.Adam(lstm.parameters(), lr=learning_rate) # adam optimiser
+    optimiser = torch.optim.Adam(lstm.parameters(), lr=learning_rate)  # adam optimiser
 
     # Train the model
-    training_loop(n_epochs=n_epochs,
+    training_loop(n_epochs=num_epochs,
                   lstm=lstm,
                   optimiser=optimiser,
                   loss_fn=loss_fn,
-                  X_train=X_train_tensors_final,
+                  x_train=x_train_tensors_final,
                   y_train=y_train_tensors,
-                  X_test=X_test_tensors_final,
+                  x_test=x_test_tensors_final,
                   y_test=y_test_tensors)
 
     # Save the trained lstm model
-    save_model(lstm, f'{modelSavedPath}_{coin}.sav')
+    save_model(lstm, f'{modelSavedPath}_{coin_name}.sav')
 
     # Get the old transformers
-    df_X_ss = ss.transform(df.drop(columns=['open']))  # old transformers
+    df_x_ss = ss.transform(df.drop(columns=['open']))  # old transformers
     df_y_mm = mm.transform(df.open.values.reshape(-1, 1))  # old transformers
     # Split the sequence
-    df_X_ss, df_y_mm = split_sequences(df_X_ss, df_y_mm, n_steps_in, n_steps_out)
+    df_x_ss, df_y_mm = split_sequences(df_x_ss, df_y_mm, n_steps_in, n_steps_out)
     # Convert to tensors
-    df_X_ss = Variable(torch.Tensor(df_X_ss))
+    df_x_ss = Variable(torch.Tensor(df_x_ss))
     df_y_mm = Variable(torch.Tensor(df_y_mm))
     # Reshsape the dataset
-    df_X_ss = torch.reshape(df_X_ss, (df_X_ss.shape[0], n_steps_in, df_X_ss.shape[2]))
+    df_x_ss = torch.reshape(df_x_ss, (df_x_ss.shape[0], n_steps_in, df_x_ss.shape[2]))
 
     # Get the predicted data
-    train_predict = lstm(df_X_ss)  # forward pass
+    train_predict = lstm(df_x_ss)  # forward pass
     data_predict = train_predict.data.numpy()  # numpy conversion
-    dataY_plot = df_y_mm.data.numpy()
+    datay_plot = df_y_mm.data.numpy()
 
     # Reverse the transformation and plot
     data_predict = mm.inverse_transform(data_predict)
-    dataY_plot = mm.inverse_transform(dataY_plot)
+    datay_plot = mm.inverse_transform(datay_plot)
     true, preds = [], []
-    for i in range(len(dataY_plot)):
-        true.append(dataY_plot[i][0])
+    for i in range(len(datay_plot)):
+        true.append(datay_plot[i][0])
     for i in range(len(data_predict)):
         preds.append(data_predict[i][0])
 
@@ -400,12 +435,12 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int, train_test
     plt.plot(preds, label='Predicted Data')  # Add predicted data
     plt.xlabel("Time[Days]")
     plt.ylabel("Price (USD)")
-    plt.title(f'{coin.capitalize()} Time-Series Prediction')
+    plt.title(f'{coin_name.capitalize()} Time-Series Prediction')
     plt.legend()
-    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_whole_plot_{coin}.png", dpi=300)
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_whole_plot_{coin_name}.png", dpi=300)
     plt.show()
 
-    test_predict = lstm(X_test_tensors_final[-1].unsqueeze(0))  # Get the last sample from the predicted data
+    test_predict = lstm(x_test_tensors_final[-1].unsqueeze(0))  # Get the last sample from the predicted data
     test_predict = test_predict.detach().numpy()
     test_predict = mm.inverse_transform(test_predict)
     test_predict = test_predict[0].tolist()
@@ -421,9 +456,9 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int, train_test
     plt.plot(test_predict, label="LSTM Predictions")
     plt.xlabel("Time[Days]")
     plt.ylabel("Price (USD)")
-    plt.title(f'{coin.capitalize()} LSTM Predictions vs Actual Data')
+    plt.title(f'{coin_name.capitalize()} LSTM Predictions vs Actual Data')
     plt.legend()
-    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_small_plot_{coin}.png", dpi=300)
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_small_plot_{coin_name}.png", dpi=300)
     plt.show()
 
     # Plot a one-shot multi-step prediction
@@ -437,13 +472,13 @@ def main(coin: str, filepath: str, n_steps_in: int, n_steps_out: int, train_test
     plt.axvline(x=len(y) - n_steps_out, c='r', linestyle='--')
     plt.xlabel("Time[Days]")
     plt.ylabel("Price (USD)")
-    plt.title(f"{coin.capitalize()} One-Shot Multi-Step Prediction ({n_steps_out} Days)")
+    plt.title(f"{coin_name.capitalize()} One-Shot Multi-Step Prediction ({n_steps_out} Days)")
     plt.legend()
-    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_one_shot_multi_step_prediction_{coin}.png", dpi=300)
+    plt.savefig(f"outputs/graphs/SentimentPriceLSTMModel_one_shot_multi_step_prediction_{coin_name}.png", dpi=300)
     plt.show()
 
-    save_scaler(mm, f'{ssScalerSavedPath}_{coin}.pkl')
-    save_scaler(ss, f'{mmScalerSavedPath}_{coin}.pkl')
+    save_scaler(mm, f'{ssScalerSavedPath}_{coin_name}.pkl')
+    save_scaler(ss, f'{mmScalerSavedPath}_{coin_name}.pkl')
 
 
 if __name__ == "__main__":
@@ -452,5 +487,5 @@ if __name__ == "__main__":
     """
     for coin in coins.keys():
         filepath = f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv'
-        train_test_split = coins[coin]
-        main(coin, filepath, n_steps_in, n_steps_out, train_test_split)
+        test_split = coins[coin]
+        main(coin, filepath, num_steps_in, num_steps_out, test_split)

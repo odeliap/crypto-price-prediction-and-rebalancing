@@ -23,19 +23,20 @@ logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-modelSavedPath = './outputs/models/SampleSentimentModel' # Path for saving model
+modelSavedPath = './outputs/models/SampleSentimentModel'  # Path for saving model
 
-test_split = 0.1 # train test split
+test_split = 0.1  # train test split
 
-coins = ['bitcoin', 'ethereum', 'solana'] # available coins
+coins = ['bitcoin', 'ethereum', 'solana']  # available coins
 
 # ----------- Class -----------
+
 
 class SampleSentimentModel:
 
     def __init__(
         self,
-        coin: str,
+        coin_name: str,
         dataframe: pd.DataFrame,
         price_label: str
     ) -> None:
@@ -44,19 +45,19 @@ class SampleSentimentModel:
 
         Parameters
         ----------
-        coin : string
+        coin_name : string
             Coin of interest.
         dataframe : pandas dataframe
             Dataset to process.
         price_label : string
             Column header name for price column.
         """
-        drop_columns = ['open', 'high', 'low', 'timestamp'] # Define columns to drop from the dataframe
+        drop_columns = ['open', 'high', 'low', 'timestamp']  # Define columns to drop from the dataframe
         features = dataframe
-        features = np.array(features.drop(drop_columns, axis=1)) # Create input features from non drop columns
-        price_data = np.array(dataframe[price_label]) # Define price output data
+        features = np.array(features.drop(drop_columns, axis=1))  # Create input features from non drop columns
+        price_data = np.array(dataframe[price_label])  # Define price output data
 
-        label_price_data = [] # Create list to store label price data
+        label_price_data = []  # Create list to store label price data
 
         # Convert prices to labels (0 = decreasing, 1 = increasing)
         previous_price = 0
@@ -74,16 +75,15 @@ class SampleSentimentModel:
         self.model = LinearDiscriminantAnalysis().fit(self.x_train, self.y_train)
 
         # Save the model
-        save_model(self.model, f'{modelSavedPath}_{coin}.sav')
+        save_model(self.model, f'{modelSavedPath}_{coin_name}.sav')
 
-
-    def predict(self, X: np.array) -> np.array:
+    def predict(self, x: np.array) -> np.array:
         """
         Predict future prices from input data.
 
         Parameters
         ----------
-        X : numpy array
+        x : numpy array
             Input data.
 
         Returns
@@ -91,19 +91,19 @@ class SampleSentimentModel:
         predictions : numpy array
             Predicted future prices.
         """
-        predictions = self.model.predict(X)
+        predictions = self.model.predict(x)
         return predictions
 
 
-def predict(coin: str, X: np.array) -> np.array:
+def predict(coin_name: str, x: np.array) -> np.array:
     """
     Predict future prices from input data based on saved model.
 
     Parameters
     ----------
-    coin : string
+    coin_name : string
         Coin of interest.
-    X : numpy array
+    x : numpy array
         Input data.
 
     Returns
@@ -111,31 +111,32 @@ def predict(coin: str, X: np.array) -> np.array:
     predictions : numpy array
         Predicted future prices.
     """
-    loaded_model = load_object(f'{modelSavedPath}_{coin}.sav') # Load the saved model
-    predictions = loaded_model.predict(X) # Predict prices
+    loaded_model = load_object(f'{modelSavedPath}_{coin_name}.sav')  # Load the saved model
+    predictions = loaded_model.predict(x)  # Predict prices
     return predictions
 
 
-def main(coin: str, filepath: str) -> None:
+def main(coin_name: str, fully_qualified_filepath: str) -> None:
     """
     Generate model
 
     Parameters
     ----------
-    coin : string
+    coin_name : string
         Coin of interest.
-    filepath : string
+    fully_qualified_filepath : string
         Path to csv file with related data for coin.
     """
-    logging.info(f"starting up {coin} sample sentiment model")
+    logging.info(f"starting up {coin_name} sample sentiment model")
 
-    dataframe = pd.read_csv(filepath) # Read in dataset
+    dataframe = pd.read_csv(fully_qualified_filepath)  # Read in dataset
 
-    model = SampleSentimentModel(coin, dataframe, 'open') # Initiate model
+    model = SampleSentimentModel(coin_name, dataframe, 'open')  # Initiate model
 
-    predictions = model.predict(model.x_test) # Get predictions from test data
+    predictions = model.predict(model.x_test)  # Get predictions from test data
 
-    logging.info(classification_report(model.y_test, predictions)) # Generate classification report from actual and predicted prices
+    # Generate classification report from actual and predicted prices
+    logging.info(classification_report(model.y_test, predictions))
 
     # Log the actual and predicted prices
     logging.info("Predictions:")

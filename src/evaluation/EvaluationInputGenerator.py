@@ -19,17 +19,17 @@ coins = ['bitcoin', 'ethereum', 'solana']
 
 # ------------- Functions -------------
 
-def replaceWithConstantSentiment(dataframe: pd.DataFrame, value: int, sentiment_cols: List[str]) -> pd.DataFrame:
+def replace_with_constant_sentiment(df: pd.DataFrame, value: int, sentiment_columns: List[str]) -> pd.DataFrame:
     """
     Replace all sentiment columns with constant values.
 
     Parameters
     ----------
-    dataframe : dataframe object
+    df : dataframe object
         Dataframe to alter.
     value : int
         Value to set sentiment columns to.
-    sentiment_cols : list of strings
+    sentiment_columns : list of strings
         Sentiment columns for which to alter values.
 
     Returns
@@ -37,10 +37,10 @@ def replaceWithConstantSentiment(dataframe: pd.DataFrame, value: int, sentiment_
     DataFrame
         Altered dataframe.
     """
-    for col in sentiment_cols:
-        dataframe[col] = value
+    for col in sentiment_columns:
+        df[col] = value
 
-    return dataframe
+    return df
 
 
 if __name__ == "__main__":
@@ -53,5 +53,5 @@ if __name__ == "__main__":
     for coin in coins:
         dataframe = pd.read_csv(f'../sentiment_analysis/outputs/{coin}_sentiment_dataset.csv', index_col=False)
         dataframe = dataframe.iloc[:, 1:]
-        constantSentimentDataframe = replaceWithConstantSentiment(dataframe, 1, sentiment_cols)
+        constantSentimentDataframe = replace_with_constant_sentiment(dataframe, 1, sentiment_cols)
         constantSentimentDataframe.to_csv(f'datasets/{coin}_constant_sentiment_dataset.csv')

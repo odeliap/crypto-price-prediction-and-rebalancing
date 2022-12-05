@@ -30,6 +30,7 @@ clean_news_filepath = 'datasets/news/processed/openblender_news.csv'
 
 # ------------- Class -------------
 
+
 class OpenBlenderApiScraper:
     """
     Class to scrape news using Open Blender API
@@ -46,8 +47,8 @@ class OpenBlenderApiScraper:
         self.clean_and_save_price_dataset()
         self.clean_and_save_tweet_dataset()
 
-
-    def save_price_dataset(self) -> None:
+    @staticmethod
+    def save_price_dataset() -> None:
         """
         Save price dataset 'Cryptoindex.com 100 Price' from Open Blender
         """
@@ -57,16 +58,18 @@ class OpenBlenderApiScraper:
             'id_dataset': '5db8ff979516291755e7d09b'
         }
 
-        dataframe = pd.read_json(StringIO(json.dumps(OpenBlender.call(action, parameters)['sample'])),
-                                       convert_dates=False,
-                                       convert_axes=False).sort_values('timestamp', ascending=False)
+        dataframe = pd.read_json(
+            StringIO(json.dumps(OpenBlender.call(action, parameters)['sample'])),
+            convert_dates=False,
+            convert_axes=False
+        ).sort_values('timestamp', ascending=False)
         dataframe.reset_index(drop=True, inplace=True)
         dataframe.head()
         logging.info(f"Saving 'Cryptoindex.com 100 Price' dataset to {price_filepath}")
         dataframe_to_csv(dataframe, price_filepath)
 
-
-    def save_news_tweet_dataset(self) -> None:
+    @staticmethod
+    def save_news_tweet_dataset() -> None:
         """
         Save crypto news tweet dataset 'CryptoCurrency News Tweet' from Open Blender
         """
@@ -84,8 +87,8 @@ class OpenBlenderApiScraper:
         logging.info(f"Saving 'CryptoCurrency News Tweet' dataset to {news_filepath}")
         dataframe_to_csv(dataframe, news_filepath)
 
-
-    def clean_and_save_tweet_dataset(self) -> None:
+    @staticmethod
+    def clean_and_save_tweet_dataset() -> None:
         """
         Save cleaned version of tweet dataset
         """
@@ -101,8 +104,8 @@ class OpenBlenderApiScraper:
         clean_news_dataframe['coin'] = ''
         dataframe_to_csv(clean_news_dataframe, clean_news_filepath)
 
-
-    def clean_and_save_price_dataset(self) -> None:
+    @staticmethod
+    def clean_and_save_price_dataset() -> None:
         """
         Save cleaned version of price dataset
         """

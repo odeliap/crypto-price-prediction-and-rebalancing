@@ -19,6 +19,8 @@ news_filepath = 'datasets/news/solana/solana_news.csv'
 price_filepath = 'datasets/price/solana/solana_price.csv'
 
 # ------------- Class -------------
+
+
 class SolanaProcessor:
 
     def __init__(
@@ -44,7 +46,6 @@ class SolanaProcessor:
             )
         )
 
-
     def combine_dataframes(self) -> pd.DataFrame:
         """
         Combine news and price dataframes into cohesive dataframe.
@@ -54,15 +55,18 @@ class SolanaProcessor:
         DataFrame
             Clean combined dataframe.
         """
-        self.news_dataframe['text'] = self.news_dataframe['text'].transform(lambda x: x.replace(',', ' ').replace('\n', ' ')) # Combine all news into single text column
-        combined_dataframe = pd.merge(self.price_dataframe, self.news_dataframe, on='timestamp', how='inner') # Combine the news and price dataframes
+        self.news_dataframe['text'] = self.news_dataframe['text']\
+            .transform(lambda x: x.replace(',', ' ').replace('\n', ' '))  # Combine all news into single text column
+        # Combine the news and price dataframes
+        combined_dataframe = pd.merge(self.price_dataframe, self.news_dataframe, on='timestamp', how='inner')
 
         # Group by timestamp to combine all the news into a text column
         combined_dataframe['text'] = combined_dataframe.groupby(['timestamp'])['text'].transform(
             lambda x: ' '.join(map(str, x)))
         combined_dataframe.dropna(inplace=True)
 
-        combined_dataframe = combined_dataframe.drop_duplicates(subset='timestamp', keep='first') # Drop duplicate timestamp entries
+        # Drop duplicate timestamp entries
+        combined_dataframe = combined_dataframe.drop_duplicates(subset='timestamp', keep='first')
         return combined_dataframe
 
 
