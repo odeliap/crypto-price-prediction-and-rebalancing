@@ -107,44 +107,6 @@ def save_scaler(scaler, fully_qualified_filepath: str) -> None:
     pickle.dump(scaler, open(fully_qualified_filepath, 'wb'))
 
 
-def load_model(fully_qualified_filepath: str):
-    """
-    Load model from path.
-
-    Parameters
-    __________
-    fully_qualified_filepath : string
-        File path to load model from.
-
-    Returns
-    _______
-    model
-        Saved neural network.
-    """
-    with open(fully_qualified_filepath, 'rb') as f:
-        model = pickle.load(f)
-    return model
-
-
-def load_scaler(fully_qualified_filepath: str):
-    """
-    Load scaler from path.
-
-    Parameters
-    __________
-    fully_qualified_filepath : string
-        File path to load scaler from.
-
-    Returns
-    _______
-    scaler
-        Saved scaler.
-    """
-    with open(fully_qualified_filepath, 'rb') as f:
-        scaler = pickle.load(f)
-    return scaler
-
-
 def generate_comparison_graph(
     y_true: np.array,
     y_pred: np.array,

@@ -15,7 +15,8 @@ from sklearn.metrics import classification_report
 
 import numpy as np
 
-from Utils import data_split, save_model, load_model
+from Utils import data_split, save_model
+from Unpickler import load_object
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -110,7 +111,7 @@ def predict(coin: str, X: np.array) -> np.array:
     predictions : numpy array
         Predicted future prices.
     """
-    loaded_model = load_model(f'{modelSavedPath}_{coin}.sav') # Load the saved model
+    loaded_model = load_object(f'{modelSavedPath}_{coin}.sav') # Load the saved model
     predictions = loaded_model.predict(X) # Predict prices
     return predictions
 

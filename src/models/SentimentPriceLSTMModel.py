@@ -18,7 +18,8 @@ import torch
 from torch.autograd import Variable
 from torch import nn
 
-from src.models.Utils import save_model, save_scaler, load_model, load_scaler
+from src.models.Utils import save_model, save_scaler
+from src.models.Unpickler import load_object
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -243,9 +244,9 @@ def predict(
         Output predictions
     """
     print(f'Loading model from path {modelSavedPath}')
-    lstm = load_model(f'{model_saved_path}_{coin}.sav') # load the lstm model
-    ss = load_scaler(f'{ss_scaler_saved_path}_{coin}.pkl') # load the ss scaler
-    mm = load_scaler(f'{mm_scaler_saved_path}_{coin}.pkl') # load the mm scaler
+    lstm = load_object(f'{model_saved_path}_{coin}.sav') # load the lstm model
+    ss = load_object(f'{ss_scaler_saved_path}_{coin}.pkl') # load the ss scaler
+    mm = load_object(f'{mm_scaler_saved_path}_{coin}.pkl') # load the mm scaler
 
     X_trans = ss.fit_transform(input) # transformed input data
     X_tensors = Variable(torch.Tensor(X_trans))

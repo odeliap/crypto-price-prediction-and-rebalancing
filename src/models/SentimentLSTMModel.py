@@ -20,7 +20,8 @@ from keras.optimizers import Adam
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 
-from Utils import save_model, save_scaler, generate_comparison_graph, load_model, load_scaler
+from Utils import save_model, save_scaler, generate_comparison_graph
+from Unpickler import load_object
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -356,8 +357,8 @@ def predict(X: np.array, coin: str) -> np.array:
         Predicted future prices.
     """
     # Load saved model and scaler
-    model = load_model(f'{modelSavedPath}_{coin}.sav')
-    scaler = load_scaler(f'{scalerSavedPath}_{coin}.pkl')
+    model = load_object(f'{modelSavedPath}_{coin}.sav')
+    scaler = load_object(f'{scalerSavedPath}_{coin}.pkl')
 
     scaled_predictions = model.predict(X) # Get scaled predicted prices
     predictions = scaler.inverse_transform(scaled_predictions) # Convert scaled prices to actual prices
