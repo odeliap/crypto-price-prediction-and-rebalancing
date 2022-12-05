@@ -122,11 +122,11 @@ def pipeline(
     with st.spinner(f'Retrieving predicted prices'):
         for coin in crypto_names:
             # Load the sentiment dataframe
-            sentiment_dataframe = pd.read_csv(f'{sentiment_subdir}/{coin}_sentiment.csv')
+            sentiment_data, open_prices = format_sentiment_input_for_predictions(f'{sentiment_subdir}/{coin}_sentiment.csv')
             # Make predictions
-            sentiment_data_formatted = format_sentiment_input_for_predictions(sentiment_dataframe)
             predictions = predict(
-                sentiment_data_formatted,
+                sentiment_data,
+                open_prices,
                 coin, n_steps_in,
                 modelSavedPath,
                 ssScalerSavedPath,

@@ -5,6 +5,7 @@ Utils for end-to-end pipeline
 # ----------- Libraries -----------
 
 import pandas as pd
+import numpy as np
 
 import os
 import shutil
@@ -117,21 +118,24 @@ def combine_dataframes(prices: pd.DataFrame, news: pd.DataFrame) -> pd.DataFrame
     return combined_dataframe
 
 
-def format_sentiment_input_for_predictions(dataframe: pd.DataFrame) -> pd.DataFrame:
+def format_sentiment_input_for_predictions(filepath: str) -> (pd.DataFrame, np.array):
     """
     Format sentiment analysis output for input to price prediction model.
 
     Parameters
     __________
-    dataframe : pandas dataframe
-        Dataframe to transform for input.
+    filepath : string
+        Path to sentiment analysis output file.
 
     Returns
     _______
     input : pandas dataframe
         Formatted dataframe.
+    open_prices : numpy array
+        Corresponding open prices.
     """
-    dataframe = dataframe.drop(dataframe.columns[[0]], axis=1)
-    if 'open' in dataframe.columns:
-        dataframe = dataframe.drop(columns=['open'])
-    return dataframe
+    dataframe = pd.read_csv(filepath, header = 0, low_memory = False, infer_datetime_format = True, index_col = ['timestamp'])
+    print(dataframe)
+    input = dataframe.drop(dataframe.columns[[0]], axis=1)
+    output = dataframe.open.values
+    return input, output

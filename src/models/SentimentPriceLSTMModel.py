@@ -213,7 +213,8 @@ def training_loop(
                                                                       test_loss.item()))
 
 def predict(
-    input: pd.DataFrame,
+    X: pd.DataFrame,
+    y: np.array,
     coin: str,
     n_steps_in: int,
     model_saved_path: str,
@@ -225,8 +226,10 @@ def predict(
 
     Parameters
     ----------
-    input : pandas dataframe
+    X : pandas dataframe
         Input data.
+    y : numpy array
+        corresponding open prices for those dates.
     coin : string
         Coin of interest.
     n_steps_in : int
@@ -243,13 +246,15 @@ def predict(
     predictions : ndarray
         Output predictions
     """
-    print(f'Loading model from path {modelSavedPath}')
     lstm = load_object(f'{model_saved_path}_{coin}.sav') # load the lstm model
     ss = load_object(f'{ss_scaler_saved_path}_{coin}.pkl') # load the ss scaler
     mm = load_object(f'{mm_scaler_saved_path}_{coin}.pkl') # load the mm scaler
 
-    X_trans = ss.fit_transform(input) # transformed input data
-    X_tensors = Variable(torch.Tensor(X_trans))
+    X_trans = ss.fit_transform(X) # transformed input data
+    y_trans = mm.fit_transform(y.reshape(-1, 1)) # transformed open prices
+    X_ss, y_ss = split_sequences(X_trans, y_trans, n_steps_in, n_steps_out)
+    X_tensors = Variable(torch.Tensor(X_ss))
+    print(torch.Tensor(X_trans).size())
     X_train_tensors_final = torch.reshape(X_tensors, (X_tensors.shape[0], n_steps_in, X_tensors.shape[2])) # reshape the transformed variable input data
 
     train_predict = lstm(X_train_tensors_final)  # perform forward pass
