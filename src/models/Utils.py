@@ -121,7 +121,9 @@ def load_model(fully_qualified_filepath: str):
     model
         Saved neural network.
     """
-    return pickle.load(open(fully_qualified_filepath), 'rb')
+    with open(fully_qualified_filepath, 'rb') as f:
+        model = pickle.load(f)
+    return model
 
 
 def load_scaler(fully_qualified_filepath: str):
@@ -138,7 +140,9 @@ def load_scaler(fully_qualified_filepath: str):
     scaler
         Saved scaler.
     """
-    return pickle.load(open(fully_qualified_filepath), 'rb')
+    with open(fully_qualified_filepath, 'rb') as f:
+        scaler = pickle.load(f)
+    return scaler
 
 
 def generate_comparison_graph(

@@ -1,5 +1,5 @@
 """
-Utils for index fund rebalancing
+Utils for index fund rebalancing evaluation
 """
 
 # ----------- Libraries -----------

@@ -1,5 +1,5 @@
 """
-Model index fund performance based on predictions.
+Model index fund performance based on predictions for comparison against new index fund.
 
 Made by following tutorial:
 https://python.plainenglish.io/how-to-improve-investment-portfolio-with-rebalancing-strategy-in-python-a58841ee8b5e
@@ -11,12 +11,11 @@ import logging
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 from datetime import datetime
 
 import yfinance as yf
 
-from Utils import CAGR, sharpe_ratio, maximum_drawdown
+from Evaluation import plot_comparison, report_evaluation_metrics
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
@@ -24,8 +23,19 @@ logging.basicConfig(level=logging.INFO)
 # ------------ Constants ------------
 
 # Coins available for rebalancing
-#coins = ['bitcoin', 'ethereum', 'solana']
-coins = ['BTC', 'BCH', 'LTC', 'EOS', 'NEO', 'DASH', 'TRX']
+coins = ['bitcoin', 'ethereum', 'solana']
+
+num_stocks = 3  # Set number of stocks to hold in the portfolio
+num_review = 1  # Set number of stocks to review
+
+start_date = '2022-05-1'  # Set start date
+end_date = '2022-07-1'  # Set end date
+
+# Format start and end dates to strings of format yyyy-MM-dd
+datetime_start = datetime.strptime(start_date, '%Y-%m-%d')
+datetime_end = datetime.strptime(end_date, '%Y-%m-%d')
+
+comparison_fund_name = 'BITW'
 
 # ------------ Logic ------------
 
@@ -63,7 +73,7 @@ def portfolio(data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFr
     return return_dataframe
 
 
-def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> (pd.DataFrame, pd.DataFrame):
+def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> pd.DataFrame:
     """
     Create balanced portfolio.
 
@@ -82,8 +92,6 @@ def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> (pd.Data
     -------
     rebalanced_portfolio : pandas dataframe
         Rebalanced portfolio dataset.
-    stock_returns : pandas dataframe
-        Stock returns.
     """
     stock_returns = pd.DataFrame()
 
@@ -93,56 +101,29 @@ def main(stock_data: pd.DataFrame, num_stocks: int, num_review: int) -> (pd.Data
     stock_returns = stock_returns.dropna()
 
     rebalanced_portfolio = portfolio(stock_returns, num_stocks, num_review)
-    return rebalanced_portfolio, stock_returns
+    return rebalanced_portfolio
 
 
 if __name__ == "__main__":
     """
-    Create rebalanced portfolio and compare against BITW index fund.
+    Create rebalanced portfolio and compare against comparison index fund.
     """
-    start_date = '2022-05-1' # Set start date
-    end_date = '2022-07-1' # Set end date
 
-    num_stocks = 3 # Set number of stocks to hold in the portfolio
-    num_review = 1 # Set number of stocks to review
-
-    # Download BITW fund data and get monthly returns
-    bitw_fund = yf.download("BITW", start=start_date, end=end_date, internal='1d')
-    bitw_fund["monthly_returns"] = bitw_fund["Adj Close"].pct_change().fillna(0)
+    # Download comparison fund data and get monthly returns
+    comparison_fund = yf.download(comparison_fund_name, start=start_date, end=end_date, internal='1d')
+    comparison_fund["monthly_returns"] = comparison_fund["Adj Close"].pct_change().fillna(0)
 
     # Download stock data for available coins
     stock_data = yf.download(coins,start=start_date, end=end_date,interval='1d')
     stock_data = stock_data.dropna()
 
     # Get rebalanced portfolio for coins' stock data
-    rebalanced_portfolio, stock_returns = main(stock_data, num_stocks, num_review)
+    rebalanced_portfolio = main(stock_data, num_stocks, num_review)
 
-    # Format start and end dates to strings of format yyyy-MM-dd
-    datetime_start = datetime.strptime(start_date, '%Y-%m-%d')
-    datetime_end = datetime.strptime(end_date, '%Y-%m-%d')
+    # Get and display evaluation metrics for rebalanced portfolio and comparison fund
+    report_evaluation_metrics(rebalanced_portfolio, datetime_start, datetime_end)
+    report_evaluation_metrics(comparison_fund, datetime_start, datetime_end, f"{comparison_fund_name} Index")
 
-    # Get and display evaluation metrics for rebalanced portfolio
-    logging.info("Rebalanced Portfolio Performance")
-    logging.info("CAGR: " + str(CAGR(rebalanced_portfolio, datetime_start, datetime_end)))
-    logging.info("Sharpe Ratio: " + str(sharpe_ratio(rebalanced_portfolio, 0.03, datetime_start, datetime_end)))
-    logging.info("Maximum Drawdown: " + str(maximum_drawdown(rebalanced_portfolio)))
-
-    logging.info(" ")
-
-    # Get and display evaluation metrics for BITW fund
-    logging.info("BITW Index Performance")
-    logging.info("CAGR: " + str(CAGR(bitw_fund, datetime_start, datetime_end)))
-    logging.info("Sharpe Ratio: " + str(sharpe_ratio(bitw_fund, 0.03, datetime_start, datetime_end)))
-    logging.info("Maximum Drawdown: " + str(maximum_drawdown(bitw_fund)))
-
-    # Plot rebalanced portfolio performance against BITW fund performance
-    plt.style.use('seaborn-v0_8-pastel')
-    fig, ax = plt.subplots()
-    plt.plot((1 + portfolio(stock_returns, num_stocks, num_review)).cumprod())
-    plt.plot((1 + bitw_fund["monthly_returns"].reset_index(drop=True)).cumprod())
-    plt.title("BITW Index Return vs Rebalancing Strategy Return")
-    plt.ylabel("cumulative return")
-    plt.xlabel("months")
-    ax.legend(["Strategy Return", "Index Return"])
-    plt.savefig(f"outputs/graphs/index_return_vs_rebalancing_strategy.png", dpi=300)
-    plt.show()
+    # Plot rebalanced portfolio performance against comparison fund performance
+    standard_fund_results = comparison_fund["monthly_returns"].reset_index(drop=True)
+    plot_comparison(rebalanced_portfolio, standard_fund_results, comparison_fund_name)

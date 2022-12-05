@@ -110,8 +110,28 @@ def combine_dataframes(prices: pd.DataFrame, news: pd.DataFrame) -> pd.DataFrame
     combined_dataframe : pandas dataframe
         Combined price and news dataframe.
     """
-    combined_dataframe = pd.merge(prices, news, on='timestamp', how='inner')
-    combined_dataframe['text'] = combined_dataframe.groupby(['timestamp'])['text'].transform(
+    news['text'] = news.groupby(['timestamp'])['text'].transform(
         lambda x: ' '.join(map(str, x)))  # Group by timestamp to combine all the news into a single text column
-    combined_dataframe.dropna(inplace=True)
+    news = news.drop_duplicates(subset='timestamp', keep='first')  # Drop duplicate timestamp entries
+    combined_dataframe = pd.merge(prices, news, on='timestamp', how='left').fillna("neutral")
     return combined_dataframe
+
+
+def format_sentiment_input_for_predictions(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Format sentiment analysis output for input to price prediction model.
+
+    Parameters
+    __________
+    dataframe : pandas dataframe
+        Dataframe to transform for input.
+
+    Returns
+    _______
+    input : pandas dataframe
+        Formatted dataframe.
+    """
+    dataframe = dataframe.drop(dataframe.columns[[0]], axis=1)
+    if 'open' in dataframe.columns:
+        dataframe = dataframe.drop(columns=['open'])
+    return dataframe
