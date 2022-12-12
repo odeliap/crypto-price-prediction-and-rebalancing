@@ -13,18 +13,15 @@ from Utils import *
 from src.scraper.NewsApiScraper import main as news_scraper
 from src.sentiment_analysis.SentimentAnalyzer import SentimentAnalyzer
 from src.models.SentimentPriceLSTMModel import predict
-"""
 from src.index_fund_rebalancing.AlgorithmicTrading import main as rebalancingAlgorithm
 from src.evaluation.RebalancingEvaluation import report_evaluation_metrics
-"""
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
 
 # ----------- Constants -----------
 
-available_cryptocurrencies = {'Bitcoin': 'BTC-USD'}
-# available_cryptocurrencies = {'Bitcoin': 'BTC-USD', 'Ethereum': 'ETH-USD', 'Solana': 'SOL-USD'}
+available_cryptocurrencies = {'Bitcoin': 'BTC-USD', 'Ethereum': 'ETH-USD', 'Solana': 'SOL-USD'}
 
 crypto_names = available_cryptocurrencies.keys()
 
@@ -133,13 +130,20 @@ def pipeline(
                 mmScalerSavedPath
             )
             # Save predictions to the predictions subdirectory
-            predictions.to_csv(f'{predicted_subdir}/{coin}_predictions.csv')
+            predictions_dataframe = pd.DataFrame({ coin.lower(): predictions })
+            predictions_dataframe['timestamp'] = sentiment_data['timestamp']
+            predictions_dataframe.to_csv(f'{predicted_subdir}/{coin}_predictions.csv')
 
-    # TODO: Combine predicted prices into single csv file and save to predicted prices subdirectory
-    predicted_prices = pd.DataFrame()
+    # TODO: loop over coins instead of hard-coding
+    bitcoin_predictions = pd.read_csv(f'{predicted_subdir}/bitcoin_predictions.csv')
+    ethereum_predictions = pd.read_csv(f'{predicted_subdir}/ethereum_predictions.csv')
+    solana_predictions = pd.read_pickle(f'{predicted_subdir}/solana_predictions.csv')
 
-    #rebalanced_portfolio, stock_returns = rebalancingAlgorithm(predicted_prices, numStocks, numRev)
-    #report_evaluation_metrics(rebalanced_portfolio, start_date, end_date)
+    # TODO: add returns subheader
+    predicted_prices = bitcoin_predictions.join(ethereum_predictions).join(solana_predictions)
+
+    rebalanced_portfolio, stock_returns = rebalancingAlgorithm(predicted_prices, numStocks, numRev)
+    report_evaluation_metrics(rebalanced_portfolio, start_date, end_date)
 
 
 def main():
@@ -148,4 +152,4 @@ def main():
     """
     make_dirs(temporary_directories)
     pipeline(available_cryptocurrencies, start_date_datetime, end_date_datetime, date_format)
-    # delete_dirs(temporary_directories)
+    delete_dirs(temporary_directories)

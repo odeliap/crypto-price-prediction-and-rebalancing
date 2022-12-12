@@ -71,7 +71,7 @@ def portfolio(data: pd.DataFrame, n_stocks: int, n_review: int) -> pd.DataFrame:
         fill = n_stocks - len(selected_stocks)
         new_picks = dataframe.iloc[i, :].sort_values(ascending=False)[:fill].index.values.tolist()
         selected_stocks = selected_stocks + new_picks
-    return_dataframe = pd.DataFrame(np.array(average_monthly_return), columns=["monthly_returns"])
+    return_dataframe = pd.DataFrame(np.array(average_monthly_return), columns=["returns"])
     return return_dataframe
 
 
@@ -98,7 +98,7 @@ def main(stock_prices: pd.DataFrame, n_stocks: int, n_review: int) -> pd.DataFra
     stock_returns = pd.DataFrame()
 
     for coin in coins:
-        stock_returns[coin] = stock_prices['Adj Close'][coin].pct_change()
+        stock_returns[coin] = stock_prices['returns'][coin].pct_change()
 
     stock_returns = stock_returns.dropna()
 
@@ -113,7 +113,7 @@ if __name__ == "__main__":
 
     # Download comparison fund data and get monthly returns
     comparison_fund = yf.download(comparison_fund_name, start=start_date, end=end_date, internal='1d')
-    comparison_fund["monthly_returns"] = comparison_fund["Adj Close"].pct_change().fillna(0)
+    comparison_fund["returns"] = comparison_fund["Adj Close"].pct_change().fillna(0)
 
     # Download stock data for available coins
     stock_data = yf.download(coins, start=start_date, end=end_date, interval='1d')
@@ -127,5 +127,5 @@ if __name__ == "__main__":
     report_evaluation_metrics(comparison_fund, datetime_start, datetime_end, f"{comparison_fund_name} Index")
 
     # Plot rebalanced portfolio performance against comparison fund performance
-    standard_fund_results = comparison_fund["monthly_returns"].reset_index(drop=True)
+    standard_fund_results = comparison_fund["returns"].reset_index(drop=True)
     plot_comparison(rebalanced_portfolio, standard_fund_results, comparison_fund_name)
