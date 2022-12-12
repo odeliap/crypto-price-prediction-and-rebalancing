@@ -15,7 +15,7 @@ from src.sentiment_analysis.SentimentAnalyzer import SentimentAnalyzer
 from src.models.SentimentPriceLSTMModel import predict
 """
 from src.index_fund_rebalancing.AlgorithmicTrading import main as rebalancingAlgorithm
-from src.index_fund_rebalancing.Evaluation import report_evaluation_metrics
+from src.evaluation.RebalancingEvaluation import report_evaluation_metrics
 """
 
 # Set logging level
@@ -135,14 +135,11 @@ def pipeline(
             # Save predictions to the predictions subdirectory
             predictions.to_csv(f'{predicted_subdir}/{coin}_predictions.csv')
 
-
-"""
     # TODO: Combine predicted prices into single csv file and save to predicted prices subdirectory
     predicted_prices = pd.DataFrame()
 
-    rebalanced_portfolio, stock_returns = rebalancingAlgorithm(predicted_prices, numStocks, numRev)
-    report_evaluation_metrics(rebalanced_portfolio, start_date, end_date)
-"""
+    #rebalanced_portfolio, stock_returns = rebalancingAlgorithm(predicted_prices, numStocks, numRev)
+    #report_evaluation_metrics(rebalanced_portfolio, start_date, end_date)
 
 
 def main():

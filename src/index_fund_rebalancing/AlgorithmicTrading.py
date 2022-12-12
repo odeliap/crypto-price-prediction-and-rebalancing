@@ -15,7 +15,7 @@ from datetime import datetime
 
 import yfinance as yf
 
-from Evaluation import plot_comparison, report_evaluation_metrics
+from src.evaluation.RebalancingEvaluation import plot_comparison, report_evaluation_metrics
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)

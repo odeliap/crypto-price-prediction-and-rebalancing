@@ -265,11 +265,13 @@ def predict(
     y_trans = mm.fit_transform(y.reshape(-1, 1))  # transformed open prices
     x_ss, y_ss = split_sequences(x_trans, y_trans, n_steps_in, n_steps_out)
     x_tensors = Variable(torch.Tensor(x_ss))
-    print(torch.Tensor(x_trans).size())
     # reshape the transformed variable input data
-    x_train_tensors_final = torch.reshape(x_tensors, (x_tensors.shape[0], n_steps_in, x_tensors.shape[2]))
+    x_tensors_final = torch.reshape(
+        x_tensors,
+        (x_tensors.shape[0], n_steps_in, x_tensors.shape[2])
+    )
 
-    train_predict = lstm(x_train_tensors_final)  # perform forward pass
+    train_predict = lstm(x_tensors_final)  # perform forward pass
     predictions = train_predict.data.numpy()  # numpy conversion
     predictions = mm.inverse_transform(predictions)  # reverse transformation with mm scaler
     return predictions
