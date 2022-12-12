@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 
 from datetime import datetime
 
-from Utils import CAGR, sharpe_ratio, maximum_drawdown
+from src.evaluation.RebalancingEvaluationUtils import CAGR, sharpe_ratio, maximum_drawdown
 
 # Set logging level
 logging.basicConfig(level=logging.INFO)
